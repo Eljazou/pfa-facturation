@@ -1,0 +1,25 @@
+{
+  "articles": [
+    { "id": 1, "designation": "Ordinateur portable", "prix_unitaire": 8500, "categorie_id": 1 },
+    { "id": 2, "designation": "Développement web", "prix_unitaire": 3000, "categorie_id": 2 },
+    { "id": 3, "designation": "Formation React", "prix_unitaire": 1500, "categorie_id": 3 }
+  ],
+  "categories": [
+    { "id": 1, "nom": "Informatique", "tva_rate": 20 },
+    { "id": 2, "nom": "Services", "tva_rate": 10 },
+    { "id": 3, "nom": "Formation", "tva_rate": 0 }
+  ],
+  "settings": [
+    { "id": 1, "key": "company_name", "value": "Mon Entreprise SARL" },
+    { "id": 2, "key": "company_address", "value": "123 Rue Mohammed V, Casablanca" },
+    { "id": 3, "key": "company_phone", "value": "+212 522 000 000" },
+    { "id": 4, "key": "company_email", "value": "contact@monentreprise.ma" },
+    { "id": 5, "key": "default_tva", "value": "20" },
+    { "id": 6, "key": "invoice_prefix", "value": "FAC" }
+  ],
+  "currencies": [
+    { "id": 1, "code": "MAD", "symbol": "د.م.", "rate": 1 },
+    { "id": 2, "code": "EUR", "symbol": "€", "rate": 10.8 },
+    { "id": 3, "code": "USD", "symbol": "$", "rate": 10.1 }
+  ]
+}
