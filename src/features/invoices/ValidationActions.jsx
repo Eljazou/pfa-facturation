@@ -249,7 +249,7 @@ export default function ValidationActions({ invoice, onUpdated }) {
               label="Date d'encaissement"
               value={payDate}
               onChange={(e) => setPayDate(e.target.value)}
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
               fullWidth
             />
             <TextField

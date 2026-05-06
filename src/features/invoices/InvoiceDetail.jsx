@@ -119,7 +119,7 @@ export default function InvoiceDetail() {
 
       <Grid container spacing={3}>
         {/* Invoice info */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3, height: '100%' }}>
             <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>Informations</Typography>
             <Stack spacing={1}>
@@ -147,7 +147,7 @@ export default function InvoiceDetail() {
         </Grid>
 
         {/* Client info + QR */}
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Paper sx={{ p: 3, height: '100%' }}>
             <Box
               sx={{
@@ -184,13 +184,13 @@ export default function InvoiceDetail() {
 
         {/* Payment / overdue tracking */}
         {(invoice.statut === 'paid' || ['pending', 'validated'].includes(invoice.statut)) && (
-          <Grid item xs={12}>
+          <Grid size={{ xs: 12 }}>
             <PaymentTracking invoice={invoice} />
           </Grid>
         )}
 
         {/* Line items */}
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
               Lignes de facturation
@@ -226,7 +226,7 @@ export default function InvoiceDetail() {
         </Grid>
 
         {/* Totals */}
-        <Grid item xs={12} md={5} sx={{ ml: 'auto' }}>
+        <Grid size={{ xs: 12, md: 5 }} sx={{ ml: 'auto' }}>
           <Paper sx={{ p: 3 }}>
             <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>Totaux</Typography>
             <Stack spacing={1}>
@@ -254,7 +254,7 @@ export default function InvoiceDetail() {
         </Grid>
 
         {invoice.signature_base64 && (
-          <Grid item xs={12} md={4}>
+          <Grid size={{ xs: 12, md: 4 }}>
             <Paper sx={{ p: 3 }}>
               <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>Signature</Typography>
               <Box

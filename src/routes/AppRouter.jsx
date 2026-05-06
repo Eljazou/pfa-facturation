@@ -9,9 +9,11 @@ import AppLayout from '../components/layout/AppLayout';
 import LoginPage from '../features/auth/LoginPage';
 import RegisterPage from '../features/auth/RegisterPage';
 import UnauthorizedPage from '../components/UnauthorizedPage';
+import NotFoundPage from '../components/NotFoundPage';
 
 // Lazy loaded heavy pages
-const UserDashboard = lazy(() => import('../features/dashboard/UserDashboard'));
+const Dashboard      = lazy(() => import('../features/dashboard/Dashboard'));
+const UserDashboard  = lazy(() => import('../features/dashboard/UserDashboard'));
 const AdminDashboard = lazy(() => import('../features/dashboard/AdminDashboard'));
 const ClientListPage = lazy(() => import('../features/clients/ClientListPage'));
 const InvoiceListPage = lazy(() => import('../features/invoices/InvoiceListPage'));
@@ -19,6 +21,8 @@ const InvoiceCreatePage = lazy(() => import('../features/invoices/InvoiceCreateP
 const InvoiceDetailPage = lazy(() => import('../features/invoices/InvoiceDetailPage'));
 const ArticleListPage = lazy(() => import('../features/articles/ArticleListPage'));
 const SettingsPage = lazy(() => import('../features/settings/SettingsPage'));
+const ArchivePage  = lazy(() => import('../features/archive/ArchivePage'));
+const ProfilePage  = lazy(() => import('../features/profile/ProfilePage'));
 
 const Loader = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
@@ -52,7 +56,7 @@ export default function AppRouter() {
           element={
             <Suspense fallback={<Loader />}>
               <RoleGuard roles={['user', 'admin']}>
-                <UserDashboard />
+                <Dashboard />
               </RoleGuard>
             </Suspense>
           }
@@ -139,10 +143,41 @@ export default function AppRouter() {
             </Suspense>
           }
         />
+        <Route
+          path="settings"
+          element={
+            <Suspense fallback={<Loader />}>
+              <RoleGuard roles={['admin']}>
+                <SettingsPage />
+              </RoleGuard>
+            </Suspense>
+          }
+        />
+        <Route
+          path="archive"
+          element={
+            <Suspense fallback={<Loader />}>
+              <RoleGuard roles={['admin']}>
+                <ArchivePage />
+              </RoleGuard>
+            </Suspense>
+          }
+        />
+        <Route
+          path="profile"
+          element={
+            <Suspense fallback={<Loader />}>
+              <RoleGuard roles={['user', 'admin']}>
+                <ProfilePage />
+              </RoleGuard>
+            </Suspense>
+          }
+        />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
 
-      {/* Catch-all */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Catch-all (unauth context) */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

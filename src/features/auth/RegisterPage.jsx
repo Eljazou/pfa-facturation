@@ -4,9 +4,8 @@ import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
-  Box, Card, CardContent, TextField, Button, Typography,
-  Link, CircularProgress, Alert, InputAdornment, IconButton,
-  MenuItem,
+  Box, TextField, Button, Typography, Link, CircularProgress, Alert,
+  InputAdornment, IconButton, MenuItem, Stack,
 } from '@mui/material';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
@@ -15,6 +14,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { register, clearError } from '../../store/authSlice';
+import AuthSplitLayout from '../../components/AuthSplitLayout';
 
 const schema = Yup.object({
   displayName: Yup.string().min(2, 'Min 2 caractères').required('Nom requis'),
@@ -46,7 +46,7 @@ export default function RegisterPage() {
 
   const field = (name, label, props = {}) => (
     <TextField
-      fullWidth margin="normal" name={name} label={label}
+      fullWidth name={name} label={label}
       value={formik.values[name]} onChange={formik.handleChange} onBlur={formik.handleBlur}
       error={formik.touched[name] && Boolean(formik.errors[name])}
       helperText={formik.touched[name] && formik.errors[name]}
@@ -55,66 +55,74 @@ export default function RegisterPage() {
   );
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'background.default', p: 2 }}>
-      <Card sx={{ width: '100%', maxWidth: 460 }}>
-        <CardContent sx={{ p: 4 }}>
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <ReceiptLongIcon sx={{ fontSize: 48, color: 'primary.main' }} />
-            <Typography variant="h5" mt={1}>Créer un compte</Typography>
-            <Typography variant="body2" color="text.secondary">PFA Facturation</Typography>
-          </Box>
+    <AuthSplitLayout>
+      <Stack direction="row" spacing={1.25} alignItems="center" sx={{ display: { md: 'none' }, mb: 3 }}>
+        <Box sx={{ width: 36, height: 36, borderRadius: 1.5, bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ReceiptLongIcon sx={{ color: '#FFFFFF', fontSize: 20 }} />
+        </Box>
+        <Typography variant="h3" sx={{ fontWeight: 700 }}>FacturaPro</Typography>
+      </Stack>
 
-          {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => dispatch(clearError())}>{error}</Alert>}
+      <Typography variant="h2" sx={{ mb: 0.5 }}>Créer un compte</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+        Rejoignez la plateforme en quelques secondes
+      </Typography>
 
-          <Box component="form" onSubmit={formik.handleSubmit} noValidate>
-            {field('displayName', 'Nom complet', {
-              InputProps: { startAdornment: <InputAdornment position="start"><PersonOutlineIcon color="action" /></InputAdornment> },
-            })}
-            {field('email', 'Email', {
-              type: 'email',
-              InputProps: { startAdornment: <InputAdornment position="start"><EmailOutlinedIcon color="action" /></InputAdornment> },
-            })}
-            {field('password', 'Mot de passe', {
-              type: showPwd ? 'text' : 'password',
-              InputProps: {
-                startAdornment: <InputAdornment position="start"><LockOutlinedIcon color="action" /></InputAdornment>,
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPwd((p) => !p)} edge="end">
-                      {showPwd ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              },
-            })}
-            {field('confirmPassword', 'Confirmer le mot de passe', {
-              type: showPwd ? 'text' : 'password',
-              InputProps: {
-                startAdornment: <InputAdornment position="start"><LockOutlinedIcon color="action" /></InputAdornment>,
-              },
-            })}
+      {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => dispatch(clearError())}>{error}</Alert>}
 
-            <TextField
-              select fullWidth margin="normal" name="role" label="Rôle"
-              value={formik.values.role} onChange={formik.handleChange} onBlur={formik.handleBlur}
-              error={formik.touched.role && Boolean(formik.errors.role)}
-              helperText={formik.touched.role && formik.errors.role}
-            >
-              <MenuItem value="user">Comptable (User)</MenuItem>
-              <MenuItem value="admin">Administrateur</MenuItem>
-            </TextField>
+      <Box component="form" onSubmit={formik.handleSubmit} noValidate>
+        <Stack spacing={2}>
+          {field('displayName', 'Nom complet', {
+            InputProps: {
+              startAdornment: <InputAdornment position="start"><PersonOutlineIcon sx={{ fontSize: 18, color: 'text.secondary' }} /></InputAdornment>,
+            },
+          })}
+          {field('email', 'Email', {
+            type: 'email',
+            InputProps: {
+              startAdornment: <InputAdornment position="start"><EmailOutlinedIcon sx={{ fontSize: 18, color: 'text.secondary' }} /></InputAdornment>,
+            },
+          })}
+          {field('password', 'Mot de passe', {
+            type: showPwd ? 'text' : 'password',
+            InputProps: {
+              startAdornment: <InputAdornment position="start"><LockOutlinedIcon sx={{ fontSize: 18, color: 'text.secondary' }} /></InputAdornment>,
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton onClick={() => setShowPwd((p) => !p)} edge="end" size="small">
+                    {showPwd ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            },
+          })}
+          {field('confirmPassword', 'Confirmer le mot de passe', {
+            type: showPwd ? 'text' : 'password',
+            InputProps: {
+              startAdornment: <InputAdornment position="start"><LockOutlinedIcon sx={{ fontSize: 18, color: 'text.secondary' }} /></InputAdornment>,
+            },
+          })}
 
-            <Button type="submit" fullWidth variant="contained" size="large" sx={{ mt: 3, mb: 2 }} disabled={loading}>
-              {loading ? <CircularProgress size={22} color="inherit" /> : "S'inscrire"}
-            </Button>
+          <TextField
+            select fullWidth name="role" label="Rôle"
+            value={formik.values.role} onChange={formik.handleChange} onBlur={formik.handleBlur}
+          >
+            <MenuItem value="user">Comptable</MenuItem>
+            <MenuItem value="admin">Administrateur</MenuItem>
+          </TextField>
 
-            <Typography variant="body2" align="center">
-              Déjà un compte?{' '}
-              <Link component={RouterLink} to="/login">Se connecter</Link>
-            </Typography>
-          </Box>
-        </CardContent>
-      </Card>
-    </Box>
+          <Button type="submit" fullWidth variant="contained" size="large" disabled={loading} sx={{ mt: 1 }}>
+            {loading ? <CircularProgress size={22} color="inherit" /> : "S'inscrire"}
+          </Button>
+        </Stack>
+
+        <Typography variant="body2" align="center" color="text.secondary" sx={{ mt: 3 }}>
+          Déjà un compte ?{' '}
+          <Link component={RouterLink} to="/login" sx={{ fontWeight: 600 }}>
+            Se connecter
+          </Link>
+        </Typography>
+      </Box>
+    </AuthSplitLayout>
   );
 }

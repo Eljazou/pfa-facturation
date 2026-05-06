@@ -1,42 +1,76 @@
 import { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Box, Toolbar } from '@mui/material';
-import Sidebar, { DRAWER_WIDTH } from './Sidebar';
+import { Box } from '@mui/material';
+import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 
-const pageTitles = {
-  '/dashboard': 'Tableau de bord',
-  '/clients': 'Gestion des clients',
-  '/invoices': 'Factures',
-  '/invoices/new': 'Nouvelle facture',
-  '/admin/dashboard': 'Tableau de bord Admin',
-  '/admin/articles': 'Articles & Catégories',
-  '/admin/settings': 'Paramètres',
+const PAGE_META = {
+  '/dashboard':       { title: 'Tableau de bord',     subtitle: 'Vue d\'ensemble de votre activité' },
+  '/admin/dashboard': { title: 'Tableau de bord',     subtitle: 'Activité agrégée' },
+  '/clients':         { title: 'Clients',             subtitle: 'Gérez votre portefeuille clients' },
+  '/invoices':        { title: 'Factures',            subtitle: 'Toutes vos factures en un coup d\'œil' },
+  '/invoices/new':    { title: 'Nouvelle facture',    subtitle: 'Créer une nouvelle facture' },
+  '/admin/articles':  { title: 'Articles & Catégories', subtitle: 'Catalogue produits' },
+  '/admin/settings':  { title: 'Paramètres',          subtitle: 'Configuration de l\'application' },
+  '/settings':        { title: 'Paramètres',          subtitle: 'Configuration de l\'application' },
+  '/archive':         { title: 'Archives',            subtitle: 'Factures archivées par année' },
+  '/profile':         { title: 'Mon profil',          subtitle: 'Gérer mon compte' },
 };
+
+function getMeta(pathname) {
+  if (PAGE_META[pathname]) return PAGE_META[pathname];
+  if (/^\/invoices\/[^/]+\/edit$/.test(pathname)) return { title: 'Modifier la facture', subtitle: '' };
+  if (/^\/invoices\/[^/]+$/.test(pathname))      return { title: 'Détail facture',         subtitle: '' };
+  return { title: 'FacturaPro', subtitle: '' };
+}
 
 export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-
-  const title = pageTitles[location.pathname] ?? 'PFA Facturation';
+  const meta = getMeta(location.pathname);
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      <Topbar title={title} onMenuClick={() => setMobileOpen(true)} />
+    <Box
+      sx={{
+        display: 'flex',
+        minHeight: '100vh',
+        width: '100%',
+        bgcolor: 'background.default',
+      }}
+    >
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
       <Box
-        component="main"
         sx={{
-          flexGrow: 1,
-          p: 3,
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
           minWidth: 0,
-          minHeight: '100vh',
-          bgcolor: 'background.default',
+          width: '100%',
         }}
       >
-        <Toolbar /> {/* spacer under fixed AppBar */}
-        <Outlet />
+        <Topbar
+          title={meta.title}
+          subtitle={meta.subtitle}
+          onMenuClick={() => setMobileOpen(true)}
+        />
+
+        <Box
+          component="main"
+          key={location.pathname}
+          className="page-enter"
+          sx={{
+            flex: 1,
+            width: '100%',
+            maxWidth: '100%',
+            minWidth: 0,
+            px: { xs: 2, md: 3, lg: 4 },
+            py: { xs: 2, md: 3 },
+            boxSizing: 'border-box',
+          }}
+        >
+          <Outlet />
+        </Box>
       </Box>
     </Box>
   );

@@ -5,6 +5,7 @@ import articlesReducer from '../features/articles/articlesSlice';
 import invoicesReducer from '../features/invoices/invoicesSlice';
 import notificationsReducer from '../features/notifications/notificationsSlice';
 import toastReducer from '../features/notifications/toastSlice';
+import settingsReducer from '../features/settings/settingsSlice';
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     invoices: invoicesReducer,
     notifications: notificationsReducer,
     toast: toastReducer,
+    settings: settingsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false }),

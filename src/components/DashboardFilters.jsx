@@ -46,7 +46,7 @@ export default function DashboardFilters({
           size="small"
           value={dateFrom}
           onChange={(e) => setDateFrom(e.target.value)}
-          InputLabelProps={{ shrink: true }}
+          slotProps={{ inputLabel: { shrink: true } }}
           sx={{ width: 150 }}
         />
         <TextField
@@ -55,7 +55,7 @@ export default function DashboardFilters({
           size="small"
           value={dateTo}
           onChange={(e) => setDateTo(e.target.value)}
-          InputLabelProps={{ shrink: true }}
+          slotProps={{ inputLabel: { shrink: true } }}
           sx={{ width: 150 }}
         />
         <TextField

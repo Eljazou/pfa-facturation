@@ -1,81 +1,230 @@
-import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Box, Drawer, List, ListItem, ListItemButton, ListItemIcon,
-  ListItemText, Toolbar, Typography, Divider, Avatar, Chip, Badge,
+  Box, Drawer, List, ListItemButton, ListItemIcon, ListItemText,
+  Typography, Avatar, Tooltip, IconButton, Divider,
 } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { userNavItems, adminNavItems } from './navConfig';
+import { tokens } from '../../theme';
+import { logout } from '../../store/authSlice';
 
-const DRAWER_WIDTH = 240;
+const DRAWER_WIDTH_OPEN = 260;
+const DRAWER_WIDTH_COLLAPSED = 72;
+const STORAGE_KEY = 'pfa.sidebar.collapsed';
 
-export default function Sidebar({ mobileOpen, onClose, variant = 'permanent' }) {
-  const { user } = useSelector((s) => s.auth);
-  const pendingCount = useSelector((s) => s.notifications?.pendingCount || 0);
+export default function Sidebar({ mobileOpen, onClose }) {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useSelector((s) => s.auth);
+  const pendingCount = useSelector((s) => s.notifications?.pendingCount || 0);
+
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem(STORAGE_KEY) === '1'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, collapsed ? '1' : '0'); } catch { /* ignore */ }
+  }, [collapsed]);
 
   const navItems = user?.role === 'admin' ? adminNavItems : userNavItems;
   const isAdmin = user?.role === 'admin';
 
-  const content = (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Toolbar sx={{ px: 2 }}>
-        <ReceiptLongIcon sx={{ color: 'primary.main', mr: 1 }} />
-        <Typography variant="h6" noWrap>PFA Facturation</Typography>
-      </Toolbar>
+  // Exact-match wins, fallback longest parent
+  const activePath = (() => {
+    const exact = navItems.find((n) => n.path === location.pathname);
+    if (exact) return exact.path;
+    return navItems
+      .filter((n) => location.pathname.startsWith(n.path + '/'))
+      .sort((a, b) => b.path.length - a.path.length)[0]?.path || null;
+  })();
 
-      <Divider />
+  // Group items into sections
+  const userItems  = navItems.filter((n) => !n.path.startsWith('/admin') && n.path !== '/archive' && n.path !== '/admin/settings');
+  const adminItems = navItems.filter((n) => n.path.startsWith('/admin') || n.path === '/archive');
 
-      {/* User info */}
-      <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-        <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36, fontSize: 14 }}>
-          {user?.displayName?.[0]?.toUpperCase() ?? 'U'}
-        </Avatar>
-        <Box sx={{ overflow: 'hidden' }}>
-          <Typography variant="body2" fontWeight={600} noWrap>{user?.displayName}</Typography>
-          <Chip
-            label={user?.role === 'admin' ? 'Admin' : 'Comptable'}
-            size="small"
-            color={user?.role === 'admin' ? 'secondary' : 'primary'}
-            sx={{ height: 18, fontSize: 10 }}
-          />
-        </Box>
-      </Box>
+  const isMobile = mobileOpen !== undefined && mobileOpen !== null;
+  const width = isMobile ? DRAWER_WIDTH_OPEN : (collapsed ? DRAWER_WIDTH_COLLAPSED : DRAWER_WIDTH_OPEN);
 
-      <Divider sx={{ mb: 1 }} />
+  const handleLogout = async () => {
+    await dispatch(logout());
+    navigate('/login');
+  };
 
-      <List sx={{ flex: 1, px: 1 }}>
-        {navItems.map(({ label, icon: Icon, path }) => {
-          const active = location.pathname === path ||
-            (path !== '/dashboard' && path !== '/admin/dashboard' && location.pathname.startsWith(path));
-          return (
-            <ListItem key={path} disablePadding sx={{ mb: 0.5 }}>
-              <ListItemButton
-                onClick={() => { navigate(path); onClose?.(); }}
-                selected={active}
+  const NavItem = ({ item, active }) => {
+    const Icon = item.icon;
+    const showBadge = isAdmin && item.path === '/invoices' && pendingCount > 0;
+    const button = (
+      <ListItemButton
+        onClick={() => { navigate(item.path); onClose?.(); }}
+        sx={{
+          minHeight: 44,
+          mx: collapsed && !isMobile ? 0.75 : 1.25,
+          my: 0.25,
+          px: collapsed && !isMobile ? 1.25 : 1.5,
+          borderRadius: '8px',
+          color: active ? '#FFFFFF' : 'rgba(248,250,252,0.75)',
+          backgroundColor: active ? tokens.color.primary : 'transparent',
+          transition: 'background-color 0.15s ease, color 0.15s ease',
+          justifyContent: collapsed && !isMobile ? 'center' : 'flex-start',
+          '&:hover': {
+            backgroundColor: active ? tokens.color.primaryDark : 'rgba(255,255,255,0.06)',
+            color: '#FFFFFF',
+          },
+        }}
+      >
+        <ListItemIcon
+          sx={{
+            minWidth: collapsed && !isMobile ? 0 : 36,
+            color: 'inherit',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon sx={{ fontSize: 20 }} />
+        </ListItemIcon>
+        {(!collapsed || isMobile) && (
+          <>
+            <ListItemText
+              primary={item.label}
+              primaryTypographyProps={{ fontSize: 14, fontWeight: active ? 600 : 500 }}
+            />
+            {showBadge && (
+              <Box
                 sx={{
-                  borderRadius: 2,
-                  '&.Mui-selected': {
-                    bgcolor: 'primary.main',
-                    color: 'white',
-                    '&:hover': { bgcolor: 'primary.dark' },
-                    '& .MuiListItemIcon-root': { color: 'white' },
-                  },
+                  ml: 1, px: 1, py: 0.25,
+                  bgcolor: active ? 'rgba(255,255,255,0.25)' : tokens.color.error,
+                  color: '#FFFFFF', borderRadius: 999,
+                  fontSize: 11, fontWeight: 600, lineHeight: 1.4,
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 38 }}>
-                  <Icon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText primary={label} primaryTypographyProps={{ fontSize: 14 }} />
-                {isAdmin && path === '/invoices' && pendingCount > 0 && (
-                  <Badge badgeContent={pendingCount} color="error" sx={{ mr: 1.5 }} />
-                )}
-              </ListItemButton>
-            </ListItem>
-          );
-        })}
-      </List>
+                {pendingCount}
+              </Box>
+            )}
+          </>
+        )}
+      </ListItemButton>
+    );
+
+    if (collapsed && !isMobile) {
+      return <Tooltip title={item.label} placement="right" arrow>{button}</Tooltip>;
+    }
+    return button;
+  };
+
+  const SectionLabel = ({ children }) =>
+    !collapsed || isMobile ? (
+      <Typography
+        variant="overline"
+        sx={{ px: 2.5, mt: 2, mb: 0.5, color: 'rgba(248,250,252,0.45)', fontSize: 10, letterSpacing: '0.08em', display: 'block' }}
+      >
+        {children}
+      </Typography>
+    ) : <Box sx={{ height: 12 }} />;
+
+  const content = (
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', color: '#F8FAFC' }}>
+      {/* Logo + collapse */}
+      <Box
+        sx={{
+          height: 64, display: 'flex', alignItems: 'center',
+          px: collapsed && !isMobile ? 0 : 2,
+          justifyContent: collapsed && !isMobile ? 'center' : 'space-between',
+          borderBottom: '1px solid rgba(255,255,255,0.06)',
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+          <Box sx={{ width: 32, height: 32, borderRadius: 1.25, bgcolor: tokens.color.primary, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ReceiptLongIcon sx={{ color: '#FFFFFF', fontSize: 18 }} />
+          </Box>
+          {(!collapsed || isMobile) && (
+            <Typography variant="h6" sx={{ color: '#FFFFFF', fontWeight: 700, letterSpacing: '-0.01em' }}>
+              FacturaPro
+            </Typography>
+          )}
+        </Box>
+        {!isMobile && (
+          <IconButton
+            size="small"
+            onClick={() => setCollapsed((v) => !v)}
+            sx={{
+              color: 'rgba(248,250,252,0.55)',
+              '&:hover': { color: '#FFFFFF', bgcolor: 'rgba(255,255,255,0.06)' },
+              ...(collapsed && { position: 'absolute', right: -12, top: 16, bgcolor: tokens.color.bgSidebar, border: '1px solid rgba(255,255,255,0.08)' }),
+            }}
+          >
+            {collapsed ? <ChevronRightIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />}
+          </IconButton>
+        )}
+      </Box>
+
+      {/* Nav */}
+      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', pb: 2 }}>
+        <SectionLabel>Menu</SectionLabel>
+        <List sx={{ p: 0 }}>
+          {userItems.map((item) => (
+            <NavItem key={item.path} item={item} active={item.path === activePath} />
+          ))}
+        </List>
+
+        {adminItems.length > 0 && (
+          <>
+            <SectionLabel>{isAdmin ? 'Administration' : 'Plus'}</SectionLabel>
+            <List sx={{ p: 0 }}>
+              {adminItems.map((item) => (
+                <NavItem key={item.path} item={item} active={item.path === activePath} />
+              ))}
+            </List>
+          </>
+        )}
+      </Box>
+
+      <Divider sx={{ borderColor: 'rgba(255,255,255,0.06)' }} />
+
+      {/* User block */}
+      <Box
+        sx={{
+          p: collapsed && !isMobile ? 1 : 1.5,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.25,
+          justifyContent: collapsed && !isMobile ? 'center' : 'flex-start',
+        }}
+      >
+        <Avatar
+          onClick={() => navigate('/profile')}
+          sx={{
+            width: 36, height: 36, fontSize: 13, bgcolor: tokens.color.primary, cursor: 'pointer',
+            '&:hover': { bgcolor: tokens.color.primaryDark },
+          }}
+        >
+          {(user?.displayName || user?.email || 'U').slice(0, 2).toUpperCase()}
+        </Avatar>
+        {(!collapsed || isMobile) && (
+          <>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#FFFFFF', lineHeight: 1.3 }} noWrap>
+                {user?.displayName || 'Utilisateur'}
+              </Typography>
+              <Typography sx={{ fontSize: 11, color: 'rgba(248,250,252,0.55)' }} noWrap>
+                {isAdmin ? 'Administrateur' : 'Comptable'}
+              </Typography>
+            </Box>
+            <Tooltip title="Déconnexion">
+              <IconButton
+                size="small"
+                onClick={handleLogout}
+                sx={{ color: 'rgba(248,250,252,0.55)', '&:hover': { color: tokens.color.error, bgcolor: 'rgba(220,38,38,0.1)' } }}
+              >
+                <LogoutIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </>
+        )}
+      </Box>
     </Box>
   );
 
@@ -84,29 +233,33 @@ export default function Sidebar({ mobileOpen, onClose, variant = 'permanent' }) 
       {/* Mobile drawer */}
       <Drawer
         variant="temporary"
-        open={mobileOpen}
+        open={!!mobileOpen}
         onClose={onClose}
         ModalProps={{ keepMounted: true }}
-        sx={{ display: { xs: 'block', md: 'none' }, '& .MuiDrawer-paper': { width: DRAWER_WIDTH } }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': { width: DRAWER_WIDTH_OPEN, bgcolor: tokens.color.bgSidebar, borderRight: 'none' },
+        }}
       >
         {content}
       </Drawer>
 
-      {/* Desktop permanent drawer */}
+      {/* Desktop drawer */}
       <Drawer
         variant="permanent"
         sx={{
           display: { xs: 'none', md: 'block' },
-          width: DRAWER_WIDTH,
+          width,
           flexShrink: 0,
+          transition: 'width 0.25s ease',
           '& .MuiDrawer-paper': {
-            width: DRAWER_WIDTH,
-            boxSizing: 'border-box',
-            borderRight: '1px solid',
-            borderColor: 'divider',
+            width,
+            bgcolor: tokens.color.bgSidebar,
+            borderRight: 'none',
+            transition: 'width 0.25s ease',
+            overflow: 'visible',
             position: 'fixed',
             height: '100vh',
-            overflowY: 'auto',
           },
         }}
         open
@@ -117,4 +270,7 @@ export default function Sidebar({ mobileOpen, onClose, variant = 'permanent' }) 
   );
 }
 
-export { DRAWER_WIDTH };
+export const SIDEBAR_WIDTH_OPEN = DRAWER_WIDTH_OPEN;
+export const SIDEBAR_WIDTH_COLLAPSED = DRAWER_WIDTH_COLLAPSED;
+// Backward compat for any imports of DRAWER_WIDTH
+export { DRAWER_WIDTH_OPEN as DRAWER_WIDTH };

@@ -168,7 +168,7 @@ export default function InvoiceList() {
           value={dateFrom}
           onChange={(e) => setDateFrom(e.target.value)}
           size="small"
-          InputLabelProps={{ shrink: true }}
+          slotProps={{ inputLabel: { shrink: true } }}
           sx={{ width: 160 }}
         />
         <TextField
@@ -177,7 +177,7 @@ export default function InvoiceList() {
           value={dateTo}
           onChange={(e) => setDateTo(e.target.value)}
           size="small"
-          InputLabelProps={{ shrink: true }}
+          slotProps={{ inputLabel: { shrink: true } }}
           sx={{ width: 160 }}
         />
       </Box>

@@ -3,16 +3,17 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   AppBar, Toolbar, IconButton, Typography, Box, Menu, MenuItem,
-  Avatar, Divider, Tooltip, ListItemIcon,
+  Avatar, Divider, Tooltip, ListItemIcon, TextField, InputAdornment,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import SearchIcon from '@mui/icons-material/Search';
 import { logout } from '../../store/authSlice';
-import { DRAWER_WIDTH } from './Sidebar';
 import NotificationBell from '../NotificationBell';
+import { tokens } from '../../theme';
 
-export default function Topbar({ title, onMenuClick }) {
+export default function Topbar({ title, subtitle, onMenuClick }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((s) => s.auth);
@@ -25,58 +26,77 @@ export default function Topbar({ title, onMenuClick }) {
   };
 
   return (
-    <AppBar
-      position="fixed"
-      elevation={0}
-      sx={{
-        width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
-        ml: { md: `${DRAWER_WIDTH}px` },
-        bgcolor: 'white',
-        color: 'text.primary',
-        borderBottom: '1px solid',
-        borderColor: 'divider',
-      }}
-    >
-      <Toolbar>
+    <AppBar position="sticky" elevation={0} sx={{ zIndex: (t) => t.zIndex.drawer - 1 }}>
+      <Toolbar sx={{ minHeight: { xs: 56, md: 64 }, gap: 1.5, px: { xs: 2, md: 3 } }}>
         <IconButton
-          color="inherit" edge="start"
+          edge="start"
           onClick={onMenuClick}
-          sx={{ mr: 2, display: { md: 'none' } }}
+          sx={{ display: { md: 'none' }, color: 'text.primary' }}
         >
           <MenuIcon />
         </IconButton>
 
-        <Typography variant="h6" sx={{ flex: 1 }} noWrap>
-          {title}
-        </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <Typography variant="h4" sx={{ fontSize: { xs: 16, md: 18 }, fontWeight: 600, lineHeight: 1.2 }} noWrap>
+            {title || 'FacturaPro'}
+          </Typography>
+          {subtitle && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', md: 'block' } }} noWrap>
+              {subtitle}
+            </Typography>
+          )}
+        </Box>
+
+        <Box sx={{ flex: 1 }} />
+
+        {/* Search — desktop only */}
+        <TextField
+          placeholder="Rechercher…"
+          size="small"
+          sx={{
+            display: { xs: 'none', lg: 'block' },
+            width: 280,
+            '& .MuiOutlinedInput-root': { bgcolor: tokens.color.bgApp, height: 38 },
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+              </InputAdornment>
+            ),
+          }}
+        />
 
         <NotificationBell />
 
-        <Tooltip title="Mon compte">
-          <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} size="small" sx={{ ml: 1 }}>
-            <Avatar sx={{ bgcolor: 'primary.main', width: 34, height: 34, fontSize: 14 }}>
-              {user?.displayName?.[0]?.toUpperCase() ?? 'U'}
+        <Tooltip title={user?.displayName || 'Mon compte'}>
+          <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ p: 0.5 }}>
+            <Avatar sx={{ bgcolor: 'primary.main', width: 34, height: 34, fontSize: 13 }}>
+              {(user?.displayName || user?.email || 'U').slice(0, 2).toUpperCase()}
             </Avatar>
           </IconButton>
         </Tooltip>
 
         <Menu
-          anchorEl={anchorEl} open={Boolean(anchorEl)}
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
           onClose={() => setAnchorEl(null)}
           transformOrigin={{ horizontal: 'right', vertical: 'top' }}
           anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-          PaperProps={{ sx: { mt: 1, minWidth: 180 } }}
+          PaperProps={{
+            sx: { mt: 1, minWidth: 220, borderRadius: 2.5, border: '1px solid', borderColor: 'divider' },
+          }}
         >
-          <Box sx={{ px: 2, py: 1 }}>
-            <Typography variant="body2" fontWeight={600}>{user?.displayName}</Typography>
-            <Typography variant="caption" color="text.secondary">{user?.email}</Typography>
+          <Box sx={{ px: 2, py: 1.5 }}>
+            <Typography variant="body2" fontWeight={600} noWrap>{user?.displayName}</Typography>
+            <Typography variant="caption" color="text.secondary" noWrap>{user?.email}</Typography>
           </Box>
           <Divider />
-          <MenuItem onClick={() => { setAnchorEl(null); navigate('/profile'); }}>
+          <MenuItem onClick={() => { setAnchorEl(null); navigate('/profile'); }} sx={{ py: 1, fontSize: 14 }}>
             <ListItemIcon><AccountCircleIcon fontSize="small" /></ListItemIcon>
             Mon profil
           </MenuItem>
-          <MenuItem onClick={handleLogout} sx={{ color: 'error.main' }}>
+          <MenuItem onClick={handleLogout} sx={{ py: 1, fontSize: 14, color: 'error.main' }}>
             <ListItemIcon><LogoutIcon fontSize="small" color="error" /></ListItemIcon>
             Déconnexion
           </MenuItem>

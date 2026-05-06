@@ -1,0 +1,45 @@
+{
+  "rules": {
+    "users": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      "$uid": {
+        ".read":  "$uid === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".write": "$uid === auth.uid"
+      }
+    },
+
+    "clients": {
+      ".read": "auth != null",
+      "$userId": {
+        ".write": "$userId === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin'"
+      }
+    },
+
+    "factures": {
+      ".read":    "auth != null",
+      ".indexOn": ["userId", "statut", "archived_year", "date_creation", "created_by"],
+      "$factureId": {
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['statut'])",
+        "statut": {
+          ".validate": "newData.val() === 'draft' || newData.val() === 'pending' || newData.val() === 'validated' || newData.val() === 'rejected' || newData.val() === 'paid'",
+          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || ((data.val() === 'draft' || data.val() === 'rejected') && newData.val() === 'pending') || (data.val() === 'validated' && newData.val() === 'paid'))"
+        },
+        "validated_by":   { ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+        "validated_at":   { ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+        "rejected_by":    { ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+        "rejected_at":    { ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+        "rejection_reason": { ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+        "archived_year":  { ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+        "archived_at":    { ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'" }
+      }
+    },
+
+    "notifications": {
+      "$bucket": {
+        ".read":  "$bucket === auth.uid || ($bucket === 'admin' && root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null"
+      }
+    }
+  }
+}

@@ -83,9 +83,10 @@ export async function generatePDF(invoiceData, clientData, companyData, signatur
 
   // ── QR code ──────────────────────────────────────────────────────────────
   const QRCode = (await import('qrcode')).default;
-  const origin = (typeof window !== 'undefined' && window.location)
-    ? window.location.origin
-    : '';
+  const envBase = (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_PUBLIC_URL : '') || '';
+  const origin = envBase
+    ? envBase.replace(/\/$/, '')
+    : (typeof window !== 'undefined' && window.location ? window.location.origin : '');
   const qrValue = invoiceData.id
     ? `${origin}/invoices/${invoiceData.id}`
     : (invoiceData.numero || '');

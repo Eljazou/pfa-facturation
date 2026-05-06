@@ -3,6 +3,10 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
+  updateProfile,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
 } from 'firebase/auth';
 import { ref, set, get, onValue, off, push, update, remove } from 'firebase/database';
 import { auth, db } from '../config/firebase';
@@ -30,6 +34,19 @@ export const onAuthChange = (callback) => onAuthStateChanged(auth, callback);
 export const getUserProfile = async (uid) => {
   const snap = await get(ref(db, `users/${uid}`));
   return snap.exists() ? snap.val() : null;
+};
+
+export const updateUserDisplayName = async (uid, displayName) => {
+  if (auth.currentUser) await updateProfile(auth.currentUser, { displayName });
+  await update(ref(db, `users/${uid}`), { displayName });
+};
+
+export const changeUserPassword = async (currentPassword, newPassword) => {
+  const user = auth.currentUser;
+  if (!user || !user.email) throw new Error('Non connecté');
+  const cred = EmailAuthProvider.credential(user.email, currentPassword);
+  await reauthenticateWithCredential(user, cred);
+  await updatePassword(user, newPassword);
 };
 
 // ── Clients ──────────────────────────────────────────────────────────────────

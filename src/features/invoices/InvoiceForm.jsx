@@ -252,14 +252,14 @@ export default function InvoiceForm() {
 
       <Grid container spacing={3}>
         {/* ── Left: form fields ─────────────────────────────────────────── */}
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs: 12, md: 8 }}>
           {/* General info */}
           <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
               Informations générales
             </Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid size={{ xs: 12 }}>
                 <Autocomplete
                   options={clients}
                   getOptionLabel={(c) => `${c.nom} — ${c.email}`}
@@ -277,7 +277,7 @@ export default function InvoiceForm() {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <FormControl fullWidth>
                   <InputLabel>Méthode de facturation</InputLabel>
                   <Select
@@ -293,7 +293,7 @@ export default function InvoiceForm() {
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12} sm={3}>
+              <Grid size={{ xs: 12, sm: 3 }}>
                 <FormControl fullWidth>
                   <InputLabel>Devise</InputLabel>
                   <Select
@@ -311,7 +311,7 @@ export default function InvoiceForm() {
                 </FormControl>
               </Grid>
 
-              <Grid item xs={12} sm={3}>
+              <Grid size={{ xs: 12, sm: 3 }}>
                 <TextField
                   label="Date *"
                   name="date_creation"
@@ -320,13 +320,13 @@ export default function InvoiceForm() {
                   onChange={formik.handleChange}
                   error={touched.date_creation && !!errors.date_creation}
                   helperText={touched.date_creation && errors.date_creation}
-                  InputLabelProps={{ shrink: true }}
+                  slotProps={{ inputLabel: { shrink: true } }}
                   fullWidth
                 />
               </Grid>
 
               {showRemise && (
-                <Grid item xs={12} sm={4}>
+                <Grid size={{ xs: 12, sm: 4 }}>
                   <TextField
                     label="Remise globale (%)"
                     name="remise_globale"
@@ -363,7 +363,7 @@ export default function InvoiceForm() {
                   <Paper key={idx} variant="outlined" sx={{ p: 2 }}>
                     <Grid container spacing={1.5} alignItems="flex-start">
                       {/* Article */}
-                      <Grid item xs={12} sm={showLineRemise ? 4 : 5}>
+                      <Grid size={{ xs: 12, sm: showLineRemise ? 4 : 5 }}>
                         <Autocomplete
                           options={articles}
                           getOptionLabel={(a) => `${a.designation} — ${a.prix_unitaire} MAD`}
@@ -383,7 +383,7 @@ export default function InvoiceForm() {
                       </Grid>
 
                       {/* Quantité */}
-                      <Grid item xs={4} sm={2}>
+                      <Grid size={{ xs: 4, sm: 2 }}>
                         <TextField
                           label="Qté *"
                           type="number"
@@ -398,7 +398,7 @@ export default function InvoiceForm() {
                       </Grid>
 
                       {/* Prix unitaire */}
-                      <Grid item xs={4} sm={2}>
+                      <Grid size={{ xs: 4, sm: 2 }}>
                         <TextField
                           label="Prix unit."
                           type="number"
@@ -412,7 +412,7 @@ export default function InvoiceForm() {
 
                       {/* Remise ligne (conditional) */}
                       {showLineRemise && (
-                        <Grid item xs={4} sm={2}>
+                        <Grid size={{ xs: 4, sm: 2 }}>
                           <TextField
                             label="Remise %"
                             type="number"
@@ -426,7 +426,7 @@ export default function InvoiceForm() {
                       )}
 
                       {/* Sous-total */}
-                      <Grid item xs={4} sm={showLineRemise ? 1.5 : 2.5}>
+                      <Grid size={{ xs: 4, sm: showLineRemise ? 1.5 : 2.5 }}>
                         <TextField
                           label="Sous-total"
                           value={`${computed.total_ligne.toFixed(2)} ${symbol}`}
@@ -438,7 +438,7 @@ export default function InvoiceForm() {
                       </Grid>
 
                       {/* Delete */}
-                      <Grid item xs="auto" sx={{ display: 'flex', alignItems: 'center', pt: 0.5 }}>
+                      <Grid size="auto" sx={{ display: 'flex', alignItems: 'center', pt: 0.5 }}>
                         <IconButton
                           color="error"
                           size="small"
@@ -467,7 +467,7 @@ export default function InvoiceForm() {
         </Grid>
 
         {/* ── Right: totals + signature ──────────────────────────────────── */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <Paper sx={{ p: 3, position: 'sticky', top: 80 }}>
             <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
               Récapitulatif
