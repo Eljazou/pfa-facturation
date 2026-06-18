@@ -41,6 +41,10 @@ export const updateUserDisplayName = async (uid, displayName) => {
   await update(ref(db, `users/${uid}`), { displayName });
 };
 
+export const updateUserPhoto = async (uid, photoURL) => {
+  await update(ref(db, `users/${uid}`), { photoURL });
+};
+
 export const changeUserPassword = async (currentPassword, newPassword) => {
   const user = auth.currentUser;
   if (!user || !user.email) throw new Error('Non connecté');
@@ -129,6 +133,24 @@ export const getNextInvoiceNumber = async (prefix = 'FAC') => {
   return `${prefix}-${year}-${String(count).padStart(4, '0')}`;
 };
 
+// ── Company settings (public read, used by public invoice page) ───────────────
+
+const COMPANY_KEYS = [
+  'company_name', 'company_address', 'company_phone', 'company_email',
+  'company_ice', 'company_rc', 'company_if', 'company_logo',
+];
+
+export const saveCompanySettingsToFirebase = async (settingsObj) => {
+  const payload = {};
+  COMPANY_KEYS.forEach((k) => { if (k in settingsObj) payload[k] = settingsObj[k] ?? ''; });
+  if (Object.keys(payload).length) await update(ref(db, 'companySettings'), payload);
+};
+
+export const getCompanySettingsFromFirebase = async () => {
+  const snap = await get(ref(db, 'companySettings'));
+  return snap.exists() ? snap.val() : {};
+};
+
 // ── Users (admin) ─────────────────────────────────────────────────────────────
 
 export const subscribeUsers = (callback) => {
@@ -139,3 +161,6 @@ export const subscribeUsers = (callback) => {
   });
   return () => off(r);
 };
+
+export const updateUserRole = (uid, role) =>
+  update(ref(db, `users/${uid}`), { role });

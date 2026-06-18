@@ -71,8 +71,8 @@ export default function Topbar({ title, subtitle, onMenuClick }) {
 
         <Tooltip title={user?.displayName || 'Mon compte'}>
           <IconButton onClick={(e) => setAnchorEl(e.currentTarget)} sx={{ p: 0.5 }}>
-            <Avatar sx={{ bgcolor: 'primary.main', width: 34, height: 34, fontSize: 13 }}>
-              {(user?.displayName || user?.email || 'U').slice(0, 2).toUpperCase()}
+            <Avatar src={user?.photoURL || undefined} sx={{ bgcolor: 'primary.main', width: 34, height: 34, fontSize: 13 }}>
+              {!user?.photoURL && (user?.displayName || user?.email || 'U').slice(0, 2).toUpperCase()}
             </Avatar>
           </IconButton>
         </Tooltip>

@@ -4,13 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box, Typography, TextField, InputAdornment, ToggleButtonGroup,
   ToggleButton, Chip, IconButton, Tooltip, Snackbar, Alert, Button,
-  CircularProgress,
+  CircularProgress, Dialog, DialogTitle, DialogContent, DialogActions,
+  Avatar,
 } from '@mui/material';
 import { DataGrid } from '@mui/x-data-grid';
-import { Search, Visibility, PictureAsPdf, Edit } from '@mui/icons-material';
-import { fetchInvoices, fetchAllInvoices } from './invoicesSlice';
+import { Search, Visibility, PictureAsPdf, Edit, Add, Delete as DeleteIcon } from '@mui/icons-material';
+import { fetchInvoices, fetchAllInvoices, deleteInvoice } from './invoicesSlice';
 import { usePDFGenerator } from '../../hooks/usePDFGenerator';
-import { Add } from '@mui/icons-material';
+import { subscribeUsers } from '../../services/firebaseService';
 import { OverdueBadge } from './PaymentTracking';
 
 const STATUS_META = {
@@ -33,12 +34,38 @@ export default function InvoiceList() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [toast, setToast] = useState({ open: false, msg: '', severity: 'success' });
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [usersMap, setUsersMap] = useState({});
   const { generateAndDownload, isGenerating } = usePDFGenerator();
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await dispatch(deleteInvoice(deleteTarget.id)).unwrap();
+      setToast({ open: true, msg: `Facture ${deleteTarget.numero} supprimée`, severity: 'success' });
+      setDeleteTarget(null);
+    } catch {
+      setToast({ open: true, msg: 'Erreur lors de la suppression', severity: 'error' });
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (isAdmin) dispatch(fetchAllInvoices());
     else dispatch(fetchInvoices(user.uid));
   }, [dispatch, isAdmin, user.uid]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    return subscribeUsers((list) => {
+      const map = {};
+      list.forEach((u) => { map[u.id] = u; });
+      setUsersMap(map);
+    });
+  }, [isAdmin]);
 
   const filtered = useMemo(() => {
     return invoices.filter((inv) => {
@@ -89,16 +116,37 @@ export default function InvoiceList() {
       },
     },
     ...(isAdmin
-      ? [{ field: 'userId', headerName: 'Créé par', width: 160 }]
+      ? [{
+          field: 'userId',
+          headerName: 'Créé par',
+          width: 180,
+          renderCell: ({ value }) => {
+            const u = usersMap[value];
+            const name = u?.displayName || u?.email || value || '—';
+            const initials = name !== value && name !== '—'
+              ? name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+              : '?';
+            return (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Avatar sx={{ width: 24, height: 24, fontSize: 11, bgcolor: 'primary.main' }}>
+                  {initials}
+                </Avatar>
+                <Typography noWrap sx={{ fontSize: 13 }}>{name}</Typography>
+              </Box>
+            );
+          },
+        }]
       : []),
     {
       field: 'actions',
       headerName: 'Actions',
       sortable: false,
-      width: 130,
+      width: 160,
       renderCell: ({ row }) => {
-        const canEdit = row.statut === 'draft' || row.statut === 'rejected';
+        const canEdit = (row.statut === 'draft' || row.statut === 'rejected') && !isAdmin;
         const canPDF = row.statut === 'validated' || row.statut === 'paid';
+        const canDelete = (row.statut === 'draft' || row.statut === 'rejected')
+          && !isAdmin && row.userId === user?.uid;
         return (
           <>
             <Tooltip title="Voir">
@@ -106,7 +154,7 @@ export default function InvoiceList() {
                 <Visibility fontSize="small" />
               </IconButton>
             </Tooltip>
-            {canEdit && !isAdmin && (
+            {canEdit && (
               <Tooltip title="Modifier">
                 <IconButton size="small" onClick={() => navigate(`/invoices/${row.id}/edit`)}>
                   <Edit fontSize="small" />
@@ -127,6 +175,13 @@ export default function InvoiceList() {
                       : <PictureAsPdf fontSize="small" />}
                   </IconButton>
                 </span>
+              </Tooltip>
+            )}
+            {canDelete && (
+              <Tooltip title="Supprimer">
+                <IconButton size="small" color="error" onClick={() => setDeleteTarget(row)}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
               </Tooltip>
             )}
           </>
@@ -216,6 +271,41 @@ export default function InvoiceList() {
       >
         <Alert severity={toast.severity}>{toast.msg}</Alert>
       </Snackbar>
+
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onClose={() => !deleting && setDeleteTarget(null)}
+        PaperProps={{ sx: { borderRadius: '16px' } }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Supprimer cette facture ?</DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>Cette action est irréversible.</Alert>
+          <Typography sx={{ fontSize: 14, color: '#64748B' }}>
+            La facture <strong>{deleteTarget?.numero}</strong> sera définitivement supprimée.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            onClick={() => setDeleteTarget(null)}
+            variant="outlined"
+            disabled={deleting}
+            sx={{ borderRadius: '8px' }}
+          >
+            Annuler
+          </Button>
+          <Button
+            onClick={handleDeleteConfirm}
+            variant="contained"
+            color="error"
+            disabled={deleting}
+            sx={{ borderRadius: '8px' }}
+          >
+            {deleting ? <CircularProgress size={18} color="inherit" /> : 'Supprimer définitivement'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

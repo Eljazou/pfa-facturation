@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { getSettings } from '../services/jsonService';
+import { getSettings } from '../services/settingsService';
 import { getInvoice } from '../services/firebaseService';
 
 export function usePDFGenerator() {

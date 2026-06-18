@@ -195,13 +195,14 @@ export default function Sidebar({ mobileOpen, onClose }) {
         }}
       >
         <Avatar
+          src={user?.photoURL || undefined}
           onClick={() => navigate('/profile')}
           sx={{
             width: 36, height: 36, fontSize: 13, bgcolor: tokens.color.primary, cursor: 'pointer',
-            '&:hover': { bgcolor: tokens.color.primaryDark },
+            '&:hover': { opacity: 0.85 },
           }}
         >
-          {(user?.displayName || user?.email || 'U').slice(0, 2).toUpperCase()}
+          {!user?.photoURL && (user?.displayName || user?.email || 'U').slice(0, 2).toUpperCase()}
         </Avatar>
         {(!collapsed || isMobile) && (
           <>

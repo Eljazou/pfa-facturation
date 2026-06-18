@@ -4,6 +4,12 @@ import {
   getCurrencies, createCurrency, updateCurrency, deleteCurrency,
   getCompanies, createCompany, updateCompany, deleteCompany,
 } from '../../services/settingsService';
+import { saveCompanySettingsToFirebase } from '../../services/firebaseService';
+
+const COMPANY_KEYS = new Set([
+  'company_name', 'company_address', 'company_phone', 'company_email',
+  'company_ice', 'company_rc', 'company_if', 'company_logo',
+]);
 
 export const fetchSettings = createAsyncThunk('settings/fetch', async () => {
   const [settings, currencies, companies] = await Promise.all([
@@ -18,6 +24,9 @@ export const saveSetting = createAsyncThunk(
   'settings/save',
   async ({ key, value }) => {
     await updateSetting(key, value);
+    if (COMPANY_KEYS.has(key)) {
+      await saveCompanySettingsToFirebase({ [key]: value }).catch(() => {});
+    }
     return { key, value };
   }
 );

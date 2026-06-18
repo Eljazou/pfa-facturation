@@ -38,7 +38,7 @@ export async function sendInvoiceEmail(invoiceData, clientData, companySettings,
     invoice_date:   fmtDate(invoiceData.date_creation),
     total_ttc:      fmtAmount(invoiceData.total_ttc, invoiceData.devise || 'MAD'),
     devise:         invoiceData.devise || 'MAD',
-    invoice_url:    `${window.location.origin}/invoices/${invoiceData.id}`,
+    invoice_url:    `${(import.meta.env.VITE_PUBLIC_URL || window.location.origin).replace(/\/$/, '')}/p/invoice/${invoiceData.id}`,
     agent_name:     agentName || '',
   };
 

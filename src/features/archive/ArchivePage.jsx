@@ -3,9 +3,13 @@ import {
   Box, Typography, Paper, Stack, Button, ToggleButtonGroup, ToggleButton,
   Alert, CircularProgress, Table, TableHead, TableBody, TableRow, TableCell,
   Chip, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar,
+  IconButton, Tooltip, TextField, InputAdornment,
 } from '@mui/material';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import SearchIcon from '@mui/icons-material/Search';
 import {
   archiveYear, getArchivedInvoices, getAvailableArchiveYears, countArchivableForYear,
 } from '../../services/archiveService';
@@ -13,6 +17,7 @@ import { exportInvoicesToExcel } from '../../services/exportService';
 import { formatAmount } from '../../utils/currencyService';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchAllInvoices } from '../invoices/invoicesSlice';
+import { usePDFGenerator } from '../../hooks/usePDFGenerator';
 
 const STATUS_LABEL = {
   draft: 'Brouillon', pending: 'En attente', validated: 'Validée',
@@ -29,6 +34,7 @@ export default function ArchivePage() {
   const dispatch = useDispatch();
   const allInvoices = useSelector((s) => s.invoices.invoices);
   const currencies  = useSelector((s) => s.settings.currencies);
+  const { generateAndDownload, generateAndPreview, isGenerating } = usePDFGenerator();
 
   const currentYear = new Date().getFullYear();
   const [years, setYears]     = useState([currentYear]);
@@ -38,6 +44,8 @@ export default function ArchivePage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [archiving, setArchiving]     = useState(false);
   const [toast, setToast] = useState(null);
+  const [search, setSearch]   = useState('');
+  const [pdfLoadingId, setPdfLoadingId] = useState(null);
 
   const isCurrentYear = year === currentYear;
   const archivableNow = useMemo(
@@ -56,19 +64,33 @@ export default function ArchivePage() {
 
   useEffect(() => {
     setLoading(true);
-    if (isCurrentYear) {
-      // For current year, show invoices that are eligible to be archived
-      setList(archivableNow);
-      setLoading(false);
-    } else {
-      getArchivedInvoices(year)
-        .then(setList)
-        .catch(() => setList([]))
-        .finally(() => setLoading(false));
-    }
-  }, [year, isCurrentYear, archivableNow]);
+    getArchivedInvoices(year)
+      .then(setList)
+      .catch(() => setList([]))
+      .finally(() => setLoading(false));
+  }, [year]);
 
-  const totalAmount = list.reduce((s, i) => s + (Number(i.total_ttc) || 0), 0);
+  const filtered = useMemo(() => {
+    if (!search.trim()) return list;
+    const q = search.toLowerCase();
+    return list.filter((inv) =>
+      (inv.numero || '').toLowerCase().includes(q) ||
+      (inv.client_nom || '').toLowerCase().includes(q) ||
+      (inv.client_email || '').toLowerCase().includes(q)
+    );
+  }, [list, search]);
+
+  const totalAmount = filtered.reduce((s, i) => s + (Number(i.total_ttc) || 0), 0);
+
+  const handlePdfDownload = async (inv) => {
+    setPdfLoadingId(inv.id);
+    try { await generateAndDownload(inv); } catch { /* ignore */ } finally { setPdfLoadingId(null); }
+  };
+
+  const handlePdfPreview = async (inv) => {
+    setPdfLoadingId(inv.id);
+    try { await generateAndPreview(inv); } catch { /* ignore */ } finally { setPdfLoadingId(null); }
+  };
 
   const handleArchive = async () => {
     setArchiving(true);
@@ -83,6 +105,8 @@ export default function ArchivePage() {
       const ys = await getAvailableArchiveYears();
       setYears(Array.from(new Set([currentYear, ...ys])).sort((a, b) => b - a));
       dispatch(fetchAllInvoices());
+      const updated = await getArchivedInvoices(currentYear);
+      setList(updated);
     } catch (e) {
       setToast({ msg: e.message || 'Erreur', severity: 'error' });
     } finally {
@@ -109,6 +133,14 @@ export default function ArchivePage() {
             <ToggleButton key={y} value={y}>{y}{y === currentYear ? ' (en cours)' : ''}</ToggleButton>
           ))}
         </ToggleButtonGroup>
+        <TextField
+          size="small"
+          placeholder="Rechercher (N°, client…)"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+          sx={{ width: 240 }}
+        />
         <Box sx={{ flex: 1 }} />
         {list.length > 0 && (
           <Button startIcon={<FileDownloadIcon />} variant="outlined" onClick={handleExport}>
@@ -149,7 +181,7 @@ export default function ArchivePage() {
             <Typography variant="caption" color="text.secondary">
               {isCurrentYear ? 'Éligibles' : 'Archivées'}
             </Typography>
-            <Typography variant="h6" fontWeight={700}>{list.length}</Typography>
+            <Typography variant="h6" fontWeight={700}>{filtered.length}{filtered.length !== list.length ? ` / ${list.length}` : ''}</Typography>
           </Box>
           <Box>
             <Typography variant="caption" color="text.secondary">Montant total</Typography>
@@ -166,11 +198,11 @@ export default function ArchivePage() {
       <Paper sx={{ p: 0 }}>
         {loading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}><CircularProgress /></Box>
-        ) : list.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <Box sx={{ p: 6, textAlign: 'center' }}>
             <ArchiveIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
             <Typography color="text.secondary">
-              {isCurrentYear ? 'Aucune facture éligible à l\'archivage' : `Aucune facture archivée pour ${year}`}
+              {search ? 'Aucun résultat pour cette recherche' : `Aucune facture archivée pour ${year}`}
             </Typography>
           </Box>
         ) : (
@@ -181,27 +213,54 @@ export default function ArchivePage() {
                   <TableCell>Numéro</TableCell>
                   <TableCell>Date</TableCell>
                   <TableCell>Client</TableCell>
+                  <TableCell>Email</TableCell>
                   <TableCell align="right">Total TTC</TableCell>
                   <TableCell>Statut</TableCell>
-                  {!isCurrentYear && <TableCell>Archivée</TableCell>}
+                  {!isCurrentYear && <TableCell>Archivée le</TableCell>}
+                  <TableCell align="center">PDF</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {list.map((inv) => (
-                  <TableRow key={inv.id}>
-                    <TableCell>{inv.numero}</TableCell>
+                {filtered.map((inv) => (
+                  <TableRow key={inv.id} hover>
+                    <TableCell sx={{ fontWeight: 600 }}>{inv.numero}</TableCell>
                     <TableCell>{fmtDate(inv.date_creation)}</TableCell>
                     <TableCell>{inv.client_nom || '—'}</TableCell>
+                    <TableCell sx={{ color: 'text.secondary', fontSize: 12 }}>{inv.client_email || '—'}</TableCell>
                     <TableCell align="right">{formatAmount(inv.total_ttc, inv.devise || 'MAD', currencies)}</TableCell>
                     <TableCell>
                       <Chip size="small" label={STATUS_LABEL[inv.statut] || inv.statut}
                             color={inv.statut === 'paid' ? 'info' : inv.statut === 'validated' ? 'success' : 'default'} />
                     </TableCell>
                     {!isCurrentYear && (
-                      <TableCell>
-                        <Chip size="small" label={`Archivé ${inv.archived_year}`} sx={{ bgcolor: 'grey.300' }} />
-                      </TableCell>
+                      <TableCell sx={{ fontSize: 12, color: 'text.secondary' }}>{fmtDate(inv.archived_at)}</TableCell>
                     )}
+                    <TableCell align="center">
+                      <Stack direction="row" spacing={0.5} justifyContent="center">
+                        <Tooltip title="Aperçu PDF">
+                          <span>
+                            <IconButton
+                              size="small"
+                              onClick={() => handlePdfPreview(inv)}
+                              disabled={pdfLoadingId === inv.id || isGenerating}
+                            >
+                              {pdfLoadingId === inv.id ? <CircularProgress size={16} /> : <OpenInNewIcon fontSize="small" />}
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                        <Tooltip title="Télécharger PDF">
+                          <span>
+                            <IconButton
+                              size="small"
+                              onClick={() => handlePdfDownload(inv)}
+                              disabled={pdfLoadingId === inv.id || isGenerating}
+                            >
+                              <PictureAsPdfIcon fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </Stack>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

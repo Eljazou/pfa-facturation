@@ -6,6 +6,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import ArchiveIcon from '@mui/icons-material/Archive';
+import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 
 export const userNavItems = [
   { label: 'Tableau de bord', icon: DashboardIcon, path: '/dashboard' },
@@ -18,6 +19,7 @@ export const adminNavItems = [
   { label: 'Tableau de bord', icon: AdminPanelSettingsIcon, path: '/admin/dashboard' },
   { label: 'Toutes les factures', icon: ReceiptLongIcon, path: '/invoices' },
   { label: 'Articles & Catégories', icon: InventoryIcon, path: '/admin/articles' },
+  { label: 'Utilisateurs', icon: ManageAccountsIcon, path: '/admin/users' },
   { label: 'Archives', icon: ArchiveIcon, path: '/archive' },
   { label: 'Paramètres', icon: SettingsIcon, path: '/admin/settings' },
 ];

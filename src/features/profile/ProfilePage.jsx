@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Box, Paper, Typography, Avatar, Stack, TextField, Button, Chip, Divider,
-  Grid, Snackbar, Alert, CircularProgress, IconButton, InputAdornment,
+  Grid, Snackbar, Alert, CircularProgress, IconButton, InputAdornment, Tooltip,
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import LockIcon from '@mui/icons-material/Lock';
 import PersonIcon from '@mui/icons-material/Person';
-import { updateUserDisplayName, changeUserPassword } from '../../services/firebaseService';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import { updateUserDisplayName, changeUserPassword, updateUserPhoto } from '../../services/firebaseService';
 import { setUser } from '../../store/authSlice';
 import { fetchInvoices, fetchAllInvoices } from '../invoices/invoicesSlice';
 import { computeUserKPIs } from '../../services/dashboardService';
@@ -34,8 +35,29 @@ export default function ProfilePage() {
   const [showPw, setShowPw] = useState({ current: false, next: false, confirm: false });
   const [savingPw, setSavingPw] = useState(false);
 
+  const [savingPhoto, setSavingPhoto] = useState(false);
   const [toast, setToast] = useState(null);
   const showToast = (msg, severity = 'success') => setToast({ msg, severity });
+
+  const handlePhotoChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showToast('Fichier non supporté (PNG, JPG, WebP uniquement)', 'error'); return; }
+    if (file.size > 5 * 1024 * 1024) { showToast('Image trop grande (max 5 Mo)', 'error'); return; }
+
+    setSavingPhoto(true);
+    try {
+      const base64 = await resizeImage(file, 200);
+      await updateUserPhoto(user.uid, base64);
+      dispatch(setUser({ ...user, photoURL: base64 }));
+      showToast('Photo de profil mise à jour');
+    } catch (err) {
+      showToast(err.message || 'Erreur', 'error');
+    } finally {
+      setSavingPhoto(false);
+      e.target.value = '';
+    }
+  };
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -102,9 +124,42 @@ export default function ProfilePage() {
         <Grid size={{ xs: 12 }}>
           <Paper sx={{ p: 3 }}>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems="center">
-              <Avatar sx={{ width: 88, height: 88, bgcolor: 'primary.main', fontSize: 32 }}>
-                {initials}
-              </Avatar>
+              {/* Clickable avatar with camera overlay */}
+              <Tooltip title="Changer la photo">
+                <Box
+                  component="label"
+                  htmlFor="photo-upload"
+                  sx={{ position: 'relative', cursor: 'pointer', display: 'inline-flex', borderRadius: '50%' }}
+                >
+                  <Avatar
+                    src={user.photoURL || undefined}
+                    sx={{ width: 88, height: 88, bgcolor: 'primary.main', fontSize: 32 }}
+                  >
+                    {!user.photoURL && initials}
+                  </Avatar>
+                  {/* Dark overlay on hover */}
+                  <Box sx={{
+                    position: 'absolute', inset: 0, borderRadius: '50%',
+                    bgcolor: 'rgba(0,0,0,0.45)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    opacity: 0,
+                    transition: 'opacity 0.2s',
+                    '&:hover': { opacity: 1 },
+                  }}>
+                    {savingPhoto
+                      ? <CircularProgress size={22} sx={{ color: '#fff' }} />
+                      : <CameraAltIcon sx={{ color: '#fff', fontSize: 26 }} />}
+                  </Box>
+                  <input
+                    id="photo-upload"
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={handlePhotoChange}
+                    disabled={savingPhoto}
+                  />
+                </Box>
+              </Tooltip>
               <Box sx={{ flex: 1, textAlign: { xs: 'center', sm: 'left' } }}>
                 <Typography variant="h6" fontWeight={700}>
                   {user.displayName || '(sans nom)'}
@@ -269,6 +324,29 @@ function Stat({ label, value }) {
       </Box>
     </Grid>
   );
+}
+
+function resizeImage(file, maxPx = 200) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+        const w = Math.round(img.width  * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width  = w;
+        canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function InfoRow({ label, value, mono }) {

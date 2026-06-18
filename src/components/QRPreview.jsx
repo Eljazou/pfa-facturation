@@ -15,7 +15,7 @@ export function getPublicBaseUrl() {
 export function buildInvoiceQRValue(invoice) {
   if (!invoice?.id) return '';
   const base = getPublicBaseUrl();
-  return `${base}/invoices/${invoice.id}`;
+  return `${base}/p/invoice/${invoice.id}`;
 }
 
 export default function QRPreview({ invoice, size = 110 }) {

@@ -88,7 +88,7 @@ export async function generatePDF(invoiceData, clientData, companyData, signatur
     ? envBase.replace(/\/$/, '')
     : (typeof window !== 'undefined' && window.location ? window.location.origin : '');
   const qrValue = invoiceData.id
-    ? `${origin}/invoices/${invoiceData.id}`
+    ? `${origin}/p/invoice/${invoiceData.id}`
     : (invoiceData.numero || '');
   const qrBase64 = await QRCode.toDataURL(qrValue, {
     width: 240,
@@ -98,19 +98,34 @@ export async function generatePDF(invoiceData, clientData, companyData, signatur
 
   // ── SECTION 1: Company header ─────────────────────────────────────────────
   let y = 16;
+  let textX = MARGIN; // shifts right when logo is present
+
+  // Draw company logo if available
+  if (companyData?.company_logo) {
+    try {
+      const base64 = companyData.company_logo;
+      const isJpeg = base64.includes('data:image/jpeg') || base64.includes('data:image/jpg');
+      const imgType = isJpeg ? 'JPEG' : 'PNG';
+      const imgData = base64.includes(',') ? base64.split(',')[1] : base64;
+      doc.addImage(imgData, imgType, MARGIN, 10, 40, 20);
+      textX = 60; // push text to the right of the logo
+    } catch (e) {
+      console.warn('[pdfGenerator] Logo could not be added:', e);
+    }
+  }
 
   doc.setFont(FONT, 'bold');
   doc.setFontSize(14);
   doc.setTextColor(...PRIMARY);
-  doc.text(safe(companyData?.company_name) || 'Mon Entreprise', MARGIN, y);
+  doc.text(safe(companyData?.company_name) || 'Mon Entreprise', textX, y);
 
   doc.setFont(FONT, 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(80, 80, 80);
   y += 5;
-  if (companyData?.company_address) { doc.text(safe(companyData.company_address), MARGIN, y); y += 4; }
-  if (companyData?.company_phone)   { doc.text(`Tel : ${safe(companyData.company_phone)}`, MARGIN, y); y += 4; }
-  if (companyData?.company_email)   { doc.text(`Email : ${safe(companyData.company_email)}`, MARGIN, y); y += 4; }
+  if (companyData?.company_address) { doc.text(safe(companyData.company_address), textX, y); y += 4; }
+  if (companyData?.company_phone)   { doc.text(`Tel : ${safe(companyData.company_phone)}`, textX, y); y += 4; }
+  if (companyData?.company_email)   { doc.text(`Email : ${safe(companyData.company_email)}`, textX, y); y += 4; }
 
   y += 3;
   drawLine(doc, y, PRIMARY);

@@ -1,14 +1,18 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   Box, Typography, Paper, Grid, Divider, Chip, Button,
   Table, TableHead, TableRow, TableCell, TableBody,
   Stepper, Step, StepLabel, Alert, CircularProgress,
-  Stack, IconButton,
+  Stack, IconButton, Dialog, DialogTitle, DialogContent,
+  DialogActions,
 } from '@mui/material';
 import {
-  ArrowBack, Edit, PictureAsPdf, OpenInNew, MailOutlined,
+  ArrowBack, Edit, PictureAsPdf, OpenInNew, MailOutlined, Delete as DeleteIcon,
 } from '@mui/icons-material';
+import { deleteInvoice } from './invoicesSlice';
+import { showToast } from '../notifications/toastSlice';
 import { useInvoiceListener } from '../../hooks/useInvoiceListener';
 import { usePDFGenerator } from '../../hooks/usePDFGenerator';
 import QRPreview from '../../components/QRPreview';
@@ -46,8 +50,11 @@ const fmtDate = (iso) => {
 export default function InvoiceDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const user = useSelector((s) => s.auth.user);
   const isAdmin = user?.role === 'admin';
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const { generateAndDownload, generateAndPreview, isGenerating } = usePDFGenerator();
   const { invoice, loading } = useInvoiceListener(id);
@@ -63,8 +70,23 @@ export default function InvoiceDetail() {
 
   const meta = STATUS_META[invoice.statut] || { label: invoice.statut, color: 'default', step: 0 };
   const symbol = invoice.devise_symbol || invoice.devise || 'MAD';
-  const canEdit = (invoice.statut === 'draft' || invoice.statut === 'rejected') && !isAdmin;
+  const canEdit   = (invoice.statut === 'draft' || invoice.statut === 'rejected') && !isAdmin;
+  const canDelete = (invoice.statut === 'draft' || invoice.statut === 'rejected')
+    && !isAdmin && invoice.userId === user?.uid;
   const canPDF  = invoice.statut === 'validated' || invoice.statut === 'paid';
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await dispatch(deleteInvoice(invoice.id)).unwrap();
+      dispatch(showToast({ message: `Facture ${invoice.numero} supprimée`, severity: 'success' }));
+      navigate('/invoices');
+    } catch {
+      dispatch(showToast({ message: 'Erreur lors de la suppression', severity: 'error' }));
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  };
 
   return (
     <Box>
@@ -297,6 +319,60 @@ export default function InvoiceDetail() {
         )}
         <ValidationActions invoice={invoice} />
       </Box>
+
+      {/* Delete button (draft / rejected owner only) */}
+      {canDelete && (
+        <>
+          <Divider sx={{ mt: 3, mb: 2 }} />
+          <Button
+            variant="outlined"
+            color="error"
+            fullWidth
+            startIcon={deleting ? <CircularProgress size={16} color="error" /> : <DeleteIcon />}
+            disabled={deleting}
+            onClick={() => setDeleteDialogOpen(true)}
+            sx={{ borderRadius: '8px' }}
+          >
+            Supprimer la facture
+          </Button>
+        </>
+      )}
+
+      {/* Delete confirmation dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => !deleting && setDeleteDialogOpen(false)}
+        PaperProps={{ sx: { borderRadius: '16px' } }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Supprimer cette facture ?</DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>Cette action est irréversible.</Alert>
+          <Typography sx={{ fontSize: 14, color: '#64748B' }}>
+            La facture <strong>{invoice?.numero}</strong> sera définitivement supprimée.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            variant="outlined"
+            disabled={deleting}
+            sx={{ borderRadius: '8px' }}
+          >
+            Annuler
+          </Button>
+          <Button
+            onClick={handleDelete}
+            variant="contained"
+            color="error"
+            disabled={deleting}
+            sx={{ borderRadius: '8px' }}
+          >
+            {deleting ? <CircularProgress size={18} color="inherit" /> : 'Supprimer définitivement'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

@@ -10,6 +10,7 @@ import LoginPage from '../features/auth/LoginPage';
 import RegisterPage from '../features/auth/RegisterPage';
 import UnauthorizedPage from '../components/UnauthorizedPage';
 import NotFoundPage from '../components/NotFoundPage';
+import PublicInvoicePage from '../features/invoices/PublicInvoicePage';
 
 // Lazy loaded heavy pages
 const Dashboard      = lazy(() => import('../features/dashboard/Dashboard'));
@@ -20,9 +21,10 @@ const InvoiceListPage = lazy(() => import('../features/invoices/InvoiceListPage'
 const InvoiceCreatePage = lazy(() => import('../features/invoices/InvoiceCreatePage'));
 const InvoiceDetailPage = lazy(() => import('../features/invoices/InvoiceDetailPage'));
 const ArticleListPage = lazy(() => import('../features/articles/ArticleListPage'));
-const SettingsPage = lazy(() => import('../features/settings/SettingsPage'));
-const ArchivePage  = lazy(() => import('../features/archive/ArchivePage'));
-const ProfilePage  = lazy(() => import('../features/profile/ProfilePage'));
+const SettingsPage         = lazy(() => import('../features/settings/SettingsPage'));
+const ArchivePage          = lazy(() => import('../features/archive/ArchivePage'));
+const ProfilePage          = lazy(() => import('../features/profile/ProfilePage'));
+const UserManagementPage   = lazy(() => import('../features/admin/UserManagementPage'));
 
 const Loader = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
@@ -37,6 +39,7 @@ export default function AppRouter() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
+      <Route path="/p/invoice/:id" element={<PublicInvoicePage />} />
 
       {/* Protected layout wrapper */}
       <Route
@@ -119,6 +122,16 @@ export default function AppRouter() {
             <Suspense fallback={<Loader />}>
               <RoleGuard roles={['admin']}>
                 <AdminDashboard />
+              </RoleGuard>
+            </Suspense>
+          }
+        />
+        <Route
+          path="admin/users"
+          element={
+            <Suspense fallback={<Loader />}>
+              <RoleGuard roles={['admin']}>
+                <UserManagementPage />
               </RoleGuard>
             </Suspense>
           }

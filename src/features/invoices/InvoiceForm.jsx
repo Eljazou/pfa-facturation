@@ -9,7 +9,7 @@ import {
   Paper, Divider, Alert, Dialog, DialogTitle,
   DialogContent, DialogActions, CircularProgress, Stack, Chip,
 } from '@mui/material';
-import { Add, Delete, Save, Send, ArrowBack, Draw, Clear } from '@mui/icons-material';
+import { Add, Delete, Save, Send, ArrowBack, Draw, Clear, WifiOff, Refresh } from '@mui/icons-material';
 import { calculateLine, calculateInvoice } from '../../utils/billingEngine';
 import { createInvoice, updateInvoice, fetchInvoices } from './invoicesSlice';
 import { getClients, getInvoice } from '../../services/firebaseService';
@@ -63,30 +63,40 @@ export default function InvoiceForm() {
   const [cancelDialog, setCancelDialog] = useState(false);
   const [sigDialog,    setSigDialog]    = useState(false);
   const [toast, setToast] = useState(null);
+  const [apiOffline, setApiOffline] = useState(false);
+
+  const loadJsonData = async () => {
+    try {
+      const [arts, cats, curs] = await Promise.all([
+        getArticles(),
+        getCategories(),
+        getCurrencies(),
+      ]);
+      setArticles(arts);
+      setCategories(cats);
+      setCurrencies(curs);
+      setApiOffline(false);
+    } catch {
+      setApiOffline(true);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
       try {
-        const [cls, arts, cats, curs] = await Promise.all([
-          getClients(user.uid),
-          getArticles(),
-          getCategories(),
-          getCurrencies(),
-        ]);
+        const cls = await getClients(user.uid);
         setClients(cls);
-        setArticles(arts);
-        setCategories(cats);
-        setCurrencies(curs);
         if (isEdit) {
           const inv = await getInvoice(id);
           setEditInvoice(inv);
         }
-      } finally {
-        setDataLoading(false);
-      }
+      } catch { /* Firebase errors handled by auth */ }
+      await loadJsonData();
+      setDataLoading(false);
     };
     dispatch(fetchInvoices(user.uid));
     load();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.uid, id, isEdit, dispatch]);
 
   const categoryTVARates = useMemo(() => {
@@ -243,6 +253,26 @@ export default function InvoiceForm() {
           {isEdit ? `Modifier — ${editInvoice?.numero}` : 'Nouvelle facture'}
         </Typography>
       </Box>
+
+      {apiOffline && (
+        <Alert
+          severity="warning"
+          icon={<WifiOff />}
+          sx={{ mb: 2 }}
+          action={
+            <Button
+              size="small"
+              startIcon={<Refresh />}
+              onClick={loadJsonData}
+              color="inherit"
+            >
+              Réessayer
+            </Button>
+          }
+        >
+          Serveur de catalogue hors ligne — les articles, catégories et devises ne sont pas disponibles.
+        </Alert>
+      )}
 
       {toast && (
         <Alert severity="error" onClose={() => setToast(null)} sx={{ mb: 2 }}>

@@ -5,7 +5,8 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
   Box, TextField, Button, Typography, Link, CircularProgress, Alert,
-  InputAdornment, IconButton, Stack,
+  InputAdornment, IconButton, Stack, Dialog, DialogTitle, DialogContent,
+  DialogActions,
 } from '@mui/material';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
@@ -14,6 +15,8 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { login, clearError } from '../../store/authSlice';
 import AuthSplitLayout from '../../components/AuthSplitLayout';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '../../config/firebase';
 
 const schema = Yup.object({
   email: Yup.string().email('Email invalide').required('Email requis'),
@@ -26,6 +29,28 @@ export default function LoginPage() {
   const location = useLocation();
   const { user, loading, error } = useSelector((s) => s.auth);
   const [showPwd, setShowPwd] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMsg, setResetMsg] = useState(null);
+
+  const handleResetPassword = async () => {
+    if (!resetEmail) return;
+    setResetLoading(true);
+    setResetMsg(null);
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      setResetMsg({ type: 'success', text: 'Email de réinitialisation envoyé. Vérifiez votre boîte mail.' });
+    } catch (err) {
+      const msgs = {
+        'auth/user-not-found':  'Aucun compte avec cet email.',
+        'auth/invalid-email':   'Email invalide.',
+      };
+      setResetMsg({ type: 'error', text: msgs[err.code] || err.message });
+    } finally {
+      setResetLoading(false);
+    }
+  };
 
   const from = location.state?.from?.pathname || '/dashboard';
 
@@ -98,6 +123,18 @@ export default function LoginPage() {
             }}
           />
 
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Link
+              component="button"
+              type="button"
+              variant="body2"
+              onClick={() => { setResetEmail(formik.values.email); setResetMsg(null); setResetOpen(true); }}
+              sx={{ fontWeight: 500 }}
+            >
+              Mot de passe oublié ?
+            </Link>
+          </Box>
+
           <Button
             type="submit" fullWidth variant="contained" size="large"
             disabled={loading}
@@ -120,6 +157,47 @@ export default function LoginPage() {
           </Link>
         </Typography>
       </Box>
+
+      {/* Forgot password dialog */}
+      <Dialog
+        open={resetOpen}
+        onClose={() => !resetLoading && setResetOpen(false)}
+        PaperProps={{ sx: { borderRadius: '16px' } }}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: 700 }}>Réinitialiser le mot de passe</DialogTitle>
+        <DialogContent>
+          {resetMsg && (
+            <Alert severity={resetMsg.type} sx={{ mb: 2 }}>{resetMsg.text}</Alert>
+          )}
+          <TextField
+            autoFocus
+            fullWidth
+            label="Adresse email"
+            type="email"
+            value={resetEmail}
+            onChange={(e) => setResetEmail(e.target.value)}
+            disabled={resetLoading || resetMsg?.type === 'success'}
+            sx={{ mt: 1 }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2, gap: 1 }}>
+          <Button onClick={() => setResetOpen(false)} variant="outlined" sx={{ borderRadius: '8px' }}>
+            Fermer
+          </Button>
+          {resetMsg?.type !== 'success' && (
+            <Button
+              onClick={handleResetPassword}
+              variant="contained"
+              disabled={resetLoading || !resetEmail}
+              sx={{ borderRadius: '8px' }}
+            >
+              {resetLoading ? <CircularProgress size={18} color="inherit" /> : 'Envoyer'}
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
     </AuthSplitLayout>
   );
 }

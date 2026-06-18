@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Box, Grid, Card, Typography, Stack, Skeleton, Button, MenuItem, TextField,
   Table, TableHead, TableBody, TableRow, TableCell, Chip, Avatar,
-  CircularProgress, LinearProgress,
+  CircularProgress, LinearProgress, Divider,
 } from '@mui/material';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
@@ -318,18 +318,20 @@ export default function AdminDashboard() {
         <Grid size={{ xs: 12, md: 8 }} sx={{ display: 'flex' }}>
           <Card sx={{ p: { xs: 2, md: 3 }, width: '100%', display: 'flex', flexDirection: 'column' }}>
             <Stack
-              direction="row" justifyContent="space-between" alignItems="center"
+              direction="row"
+              alignItems="center"
+              gap={2}
               sx={{ mb: 2, pb: 2, borderBottom: '1px solid', borderColor: 'divider' }}
             >
-              <Box>
-                <Typography sx={{ fontSize: 15, fontWeight: 600 }}>Chiffre d'affaires mensuel</Typography>
-                <Typography variant="caption" color="text.secondary">Montant encaissé par mois</Typography>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{ fontSize: 15, fontWeight: 600 }} noWrap>Chiffre d'affaires mensuel</Typography>
+                <Typography variant="caption" color="text.secondary" noWrap>Montant encaissé par mois</Typography>
               </Box>
               <TextField
                 select size="small"
                 value={year}
                 onChange={(e) => setYear(Number(e.target.value))}
-                sx={{ width: 110 }}
+                sx={{ width: 100, flexShrink: 0 }}
               >
                 {yearOptions.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
               </TextField>
@@ -357,22 +359,26 @@ export default function AdminDashboard() {
               </ResponsiveContainer>
             </Box>
 
-            <Stack direction="row" gap={3} sx={{ mt: 'auto', pt: 2, borderTop: '1px solid', borderColor: 'divider', flexWrap: 'wrap' }}>
-              <Box>
-                <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>Meilleur mois</Typography>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+            <Stack
+              direction="row"
+              divider={<Divider orientation="vertical" flexItem />}
+              sx={{ mt: 'auto', pt: 2, borderTop: '1px solid', borderColor: 'divider', gap: 2 }}
+            >
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{ fontSize: 11, color: 'text.secondary', whiteSpace: 'nowrap' }}>Meilleur mois</Typography>
+                <Typography sx={{ fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {barSummary.best.month}: {formatAmount(barSummary.best.revenue, devise)}
                 </Typography>
               </Box>
-              <Box>
-                <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>Total année</Typography>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{ fontSize: 11, color: 'text.secondary', whiteSpace: 'nowrap' }}>Total année</Typography>
+                <Typography sx={{ fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {formatAmount(barSummary.yearTotal, devise)}
                 </Typography>
               </Box>
-              <Box>
-                <Typography sx={{ fontSize: 11, color: 'text.secondary' }}>Moyenne mensuelle</Typography>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{ fontSize: 11, color: 'text.secondary', whiteSpace: 'nowrap' }}>Moyenne mensuelle</Typography>
+                <Typography sx={{ fontSize: 13, fontWeight: 700, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {formatAmount(barSummary.avg, devise)}
                 </Typography>
               </Box>

@@ -5,6 +5,7 @@ import {
   createInvoice as fbCreateInvoice,
   updateInvoice as fbUpdateInvoice,
   updateStatus as fbUpdateStatus,
+  deleteInvoice as fbDeleteInvoice,
 } from '../../services/firebaseService';
 import { generateInvoiceNumber } from '../../utils/invoiceNumber';
 
@@ -44,6 +45,18 @@ export const updateInvoice = createAsyncThunk(
       await fbUpdateInvoice(id, data);
       return { id, data };
     } catch (err) { return rejectWithValue(err.message); }
+  }
+);
+
+export const deleteInvoice = createAsyncThunk(
+  'invoices/delete',
+  async (invoiceId, { rejectWithValue }) => {
+    try {
+      await fbDeleteInvoice(invoiceId);
+      return invoiceId;
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
   }
 );
 
@@ -108,7 +121,14 @@ const invoicesSlice = createSlice({
         if (state.currentInvoice?.id === payload.id)
           state.currentInvoice = { ...state.currentInvoice, ...payload.statusData };
       })
-      .addCase(updateInvoiceStatus.rejected, rejected);
+      .addCase(updateInvoiceStatus.rejected, rejected)
+      .addCase(deleteInvoice.pending, pending)
+      .addCase(deleteInvoice.fulfilled, (state, { payload: id }) => {
+        state.loading = false;
+        state.invoices = state.invoices.filter((i) => i.id !== id);
+        if (state.currentInvoice?.id === id) state.currentInvoice = null;
+      })
+      .addCase(deleteInvoice.rejected, rejected);
   },
 });
 

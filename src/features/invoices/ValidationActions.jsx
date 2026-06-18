@@ -8,11 +8,12 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import PaidIcon from '@mui/icons-material/Paid';
 import SendIcon from '@mui/icons-material/Send';
+import ReplayIcon from '@mui/icons-material/Replay';
 import { transitionInvoice, getAvailableActions } from '../../services/workflowService';
 import { triggerNotification } from '../../services/notificationService';
 import { sendInvoiceEmail } from '../../services/emailService';
 import { showToast } from '../notifications/toastSlice';
-import { getSettings } from '../../services/jsonService';
+import { getSettings } from '../../services/settingsService';
 import { ref as dbRef, update as dbUpdate } from 'firebase/database';
 import { db } from '../../config/firebase';
 
@@ -27,6 +28,7 @@ export default function ValidationActions({ invoice, onUpdated }) {
   const [validateOpen, setValidateOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [payOpen, setPayOpen] = useState(false);
+  const [resubmitOpen, setResubmitOpen] = useState(false);
   const [reason, setReason] = useState('');
   const [payDate, setPayDate] = useState(new Date().toISOString().slice(0, 10));
   const [payType, setPayType] = useState(PAYMENT_TYPES[0]);
@@ -142,6 +144,27 @@ export default function ValidationActions({ invoice, onUpdated }) {
     onUpdated?.(res.payload);
   };
 
+  const handleResubmit = async () => {
+    setLoading(true);
+    const res = await transitionInvoice(invoice.id, invoice.statut, 'pending', 'user', user.uid);
+    if (!res.success) {
+      setLoading(false);
+      setResubmitOpen(false);
+      dispatch(showToast({ message: res.error, severity: 'error' }));
+      return;
+    }
+    // Clear rejection reason now that invoice is resubmitted
+    try {
+      await dbUpdate(dbRef(db, `factures/${invoice.id}`), { rejection_reason: null, rejected_at: null, rejected_by: null });
+    } catch { /* non-critical */ }
+    // Notify admins
+    try { await triggerNotification('invoice_submitted', { ...invoice, ...res.payload }, 'admin'); } catch { /* ignore */ }
+    setLoading(false);
+    setResubmitOpen(false);
+    dispatch(showToast({ message: 'Facture resoumise pour validation', severity: 'success' }));
+    onUpdated?.(res.payload);
+  };
+
   return (
     <>
       <Stack direction="row" spacing={2} flexWrap="wrap" useFlexGap>
@@ -186,6 +209,17 @@ export default function ValidationActions({ invoice, onUpdated }) {
             disabled={loading}
           >
             Marquer comme payée
+          </Button>
+        )}
+        {actions.includes('resubmit') && (
+          <Button
+            variant="contained"
+            color="warning"
+            startIcon={loading ? <CircularProgress size={16} color="inherit" /> : <ReplayIcon />}
+            onClick={() => setResubmitOpen(true)}
+            disabled={loading}
+          >
+            Resoumission
           </Button>
         )}
       </Stack>
@@ -235,6 +269,33 @@ export default function ValidationActions({ invoice, onUpdated }) {
             disabled={loading || reason.trim().length < 10}
           >
             {loading ? <CircularProgress size={18} /> : 'Rejeter'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Resubmit dialog */}
+      <Dialog open={resubmitOpen} onClose={() => !loading && setResubmitOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Resoumission de la facture</DialogTitle>
+        <DialogContent>
+          {invoice.rejection_reason && (
+            <Box sx={{ mb: 2, p: 2, bgcolor: 'error.50', borderRadius: 1, border: '1px solid', borderColor: 'error.light' }}>
+              <DialogContentText sx={{ fontWeight: 600, color: 'error.main', mb: 0.5 }}>
+                Motif du rejet précédent :
+              </DialogContentText>
+              <DialogContentText sx={{ color: 'error.dark' }}>
+                {invoice.rejection_reason}
+              </DialogContentText>
+            </Box>
+          )}
+          <DialogContentText>
+            La facture <b>{invoice.numero}</b> sera resoumise pour validation.
+            Assurez-vous d'avoir corrigé les problèmes signalés.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setResubmitOpen(false)} disabled={loading}>Annuler</Button>
+          <Button onClick={handleResubmit} variant="contained" color="warning" disabled={loading}>
+            {loading ? <CircularProgress size={18} /> : 'Resoumission'}
           </Button>
         </DialogActions>
       </Dialog>
