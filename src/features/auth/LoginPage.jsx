@@ -156,6 +156,16 @@ export default function LoginPage() {
             Créer un compte
           </Link>
         </Typography>
+
+        <Typography variant="body2" align="center" sx={{ mt: 2 }}>
+          <Link
+            component={RouterLink}
+            to="/pricing"
+            sx={{ color: 'text.secondary', fontWeight: 500, '&:hover': { color: 'primary.main' } }}
+          >
+            Voir nos tarifs →
+          </Link>
+        </Typography>
       </Box>
 
       {/* Forgot password dialog */}

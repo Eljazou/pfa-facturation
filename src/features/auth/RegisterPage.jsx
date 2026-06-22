@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate, Link as RouterLink, useLocation } from 'react-router-dom';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import {
@@ -29,6 +29,8 @@ const schema = Yup.object({
 export default function RegisterPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { email: prefillEmail, name: prefillName, plan, fromPayment } = location.state || {};
   const { user, loading, error } = useSelector((s) => s.auth);
   const [showPwd, setShowPwd] = useState(false);
 
@@ -38,7 +40,7 @@ export default function RegisterPage() {
   }, [user, navigate]);
 
   const formik = useFormik({
-    initialValues: { displayName: '', email: '', password: '', confirmPassword: '', role: 'user' },
+    initialValues: { displayName: prefillName || '', email: prefillEmail || '', password: '', confirmPassword: '', role: 'user' },
     validationSchema: schema,
     onSubmit: ({ displayName, email, password, role }) =>
       dispatch(register({ displayName, email, password, role })),
@@ -68,6 +70,11 @@ export default function RegisterPage() {
         Rejoignez la plateforme en quelques secondes
       </Typography>
 
+      {fromPayment && (
+        <Alert severity="success" sx={{ mb: 2 }}>
+          ✅ Paiement {plan} confirmé ! Finalisez la création de votre compte.
+        </Alert>
+      )}
       {error && <Alert severity="error" sx={{ mb: 2 }} onClose={() => dispatch(clearError())}>{error}</Alert>}
 
       <Box component="form" onSubmit={formik.handleSubmit} noValidate>

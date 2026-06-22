@@ -7,12 +7,14 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import ArchiveIcon from '@mui/icons-material/Archive';
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
+import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
 
 export const userNavItems = [
   { label: 'Tableau de bord', icon: DashboardIcon, path: '/dashboard' },
   { label: 'Clients', icon: PeopleIcon, path: '/clients' },
   { label: 'Factures', icon: ReceiptLongIcon, path: '/invoices' },
   { label: 'Nouvelle facture', icon: AddBoxIcon, path: '/invoices/new' },
+  { label: 'Nos tarifs', icon: LocalOfferOutlinedIcon, path: '/pricing' },
 ];
 
 export const adminNavItems = [
@@ -22,4 +24,5 @@ export const adminNavItems = [
   { label: 'Utilisateurs', icon: ManageAccountsIcon, path: '/admin/users' },
   { label: 'Archives', icon: ArchiveIcon, path: '/archive' },
   { label: 'Paramètres', icon: SettingsIcon, path: '/admin/settings' },
+  { label: 'Nos tarifs', icon: LocalOfferOutlinedIcon, path: '/pricing' },
 ];

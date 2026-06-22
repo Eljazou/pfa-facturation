@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { Box, CircularProgress } from '@mui/material';
 import RequireAuth from './RequireAuth';
 import RoleGuard from './RoleGuard';
@@ -25,6 +26,7 @@ const SettingsPage         = lazy(() => import('../features/settings/SettingsPag
 const ArchivePage          = lazy(() => import('../features/archive/ArchivePage'));
 const ProfilePage          = lazy(() => import('../features/profile/ProfilePage'));
 const UserManagementPage   = lazy(() => import('../features/admin/UserManagementPage'));
+const PricingPage          = lazy(() => import('../pages/PricingPage'));
 
 const Loader = () => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
@@ -32,10 +34,20 @@ const Loader = () => (
   </Box>
 );
 
+// Shows PricingPage to guests; redirects logged-in users to their dashboard
+function SmartHome() {
+  const { user, initialized } = useSelector((s) => s.auth);
+  if (!initialized) return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}><CircularProgress /></Box>;
+  if (user) return <Navigate to={user.role === 'admin' ? '/admin/dashboard' : '/dashboard'} replace />;
+  return <Suspense fallback={<Loader />}><PricingPage /></Suspense>;
+}
+
 export default function AppRouter() {
   return (
     <Routes>
-      {/* Public */}
+      {/* Home — public for guests, redirects to dashboard when logged in */}
+      <Route path="/" element={<SmartHome />} />
+      <Route path="/pricing" element={<Suspense fallback={<Loader />}><PricingPage /></Suspense>} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
@@ -50,9 +62,6 @@ export default function AppRouter() {
           </RequireAuth>
         }
       >
-        {/* Shared — any authenticated user */}
-        <Route index element={<Navigate to="/dashboard" replace />} />
-
         {/* USER (comptable) routes */}
         <Route
           path="dashboard"

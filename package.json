@@ -18,6 +18,8 @@
     "@mui/material": "^9.0.0",
     "@mui/x-data-grid": "^9.0.4",
     "@reduxjs/toolkit": "^2.11.2",
+    "@stripe/react-stripe-js": "^6.6.0",
+    "@stripe/stripe-js": "^9.8.0",
     "decimal.js": "^10.6.0",
     "emailjs-com": "^3.2.0",
     "firebase": "^12.12.1",
