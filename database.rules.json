@@ -19,6 +19,7 @@
       ".read":    "auth != null",
       ".indexOn": ["userId", "statut", "archived_year", "date_creation", "created_by"],
       "$factureId": {
+        ".read":  true,
         ".write": "auth != null",
         ".validate": "newData.hasChildren(['statut'])",
         "statut": {
@@ -33,6 +34,11 @@
         "archived_year":  { ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
         "archived_at":    { ".write": "root.child('users').child(auth.uid).child('role').val() === 'admin'" }
       }
+    },
+
+    "companySettings": {
+      ".read":  true,
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
     },
 
     "notifications": {

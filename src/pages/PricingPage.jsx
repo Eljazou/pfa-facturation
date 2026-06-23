@@ -132,7 +132,7 @@ const PLANS = [
     id: 'pro',
     icon: GroupIcon,
     label: 'Pro',
-    subtitle: '3 utilisateurs · factures illimitées',
+    subtitle: '2 utilisateurs · factures illimitées',
     accent: '#2563EB',
     monthly: 200,
     annual: 160,
@@ -178,7 +178,7 @@ const PLANS = [
 
 const COMPARE_ROWS = [
   { feature: 'Nombre de factures',  basic: '50/mois',   pro: 'Illimitées', enterprise: 'Illimitées' },
-  { feature: 'Utilisateurs',        basic: '1',         pro: '3',          enterprise: 'Illimités' },
+  { feature: 'Utilisateurs',        basic: '1',         pro: '2',          enterprise: 'Illimités' },
   { feature: 'Génération PDF',      basic: true,        pro: true,         enterprise: true },
   { feature: 'Signature numérique', basic: false,       pro: true,         enterprise: true },
   { feature: 'QR code',             basic: false,       pro: true,         enterprise: true },
