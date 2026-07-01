@@ -18,7 +18,7 @@ import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts';
-import { fetchAllInvoices } from '../invoices/invoicesSlice';
+import { setAllInvoices } from '../invoices/invoicesSlice';
 import {
   computeAdminKPIs, buildMonthlyRevenueData, buildStatusDistributionData,
   buildTopClientsData, buildRecentActivity, filterInvoices,
@@ -26,7 +26,7 @@ import {
 import { exportInvoicesToExcel, exportKPIsToExcel } from '../../services/exportService';
 import { formatAmount } from '../../utils/format';
 import { formatDistanceToNow } from '../../utils/timeFormat';
-import { subscribeUsers } from '../../services/firebaseService';
+import { subscribeUsers, subscribeInvoices } from '../../services/firebaseService';
 import KPICard from '../../components/KPICard';
 import StatusChip from '../../components/StatusChip';
 import DashboardFilters from '../../components/DashboardFilters';
@@ -83,7 +83,10 @@ export default function AdminDashboard() {
   const [year, setYear]       = useState(new Date().getFullYear());
   const [usersById, setUsersById] = useState({});
 
-  useEffect(() => { dispatch(fetchAllInvoices()); }, [dispatch]);
+  useEffect(() => {
+    const unsub = subscribeInvoices((list) => dispatch(setAllInvoices(list)));
+    return unsub;
+  }, [dispatch]);
 
   // Real-time users map (id → user)
   useEffect(() => {
@@ -167,16 +170,16 @@ export default function AdminDashboard() {
           alignItems={{ xs: 'flex-start', md: 'center' }}
           gap={2}
         >
-          <Box>
-            <Typography sx={{ fontSize: 22, fontWeight: 700, lineHeight: 1.2 }}>
+          <Box sx={{ flexShrink: 0 }}>
+            <Typography sx={{ fontSize: 22, fontWeight: 700, lineHeight: 1.2, whiteSpace: 'nowrap' }}>
               Tableau de bord Admin
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               Vue globale de toutes les activités
             </Typography>
           </Box>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ md: 'center' }} sx={{ width: { xs: '100%', md: 'auto' } }}>
-            <Box sx={{ '& > *': { mb: '0 !important' } }}>
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ md: 'center' }} sx={{ flex: 1, width: '100%' }}>
+            <Box sx={{ flex: 1, '& > *': { mb: '0 !important' } }}>
               <DashboardFilters onChange={setFilters} onExport={handleExport} />
             </Box>
             <Button

@@ -149,7 +149,7 @@ export default function UserDashboard() {
               Voici l'aperçu de votre activité.
             </Typography>
           </Box>
-          <Box sx={{ width: { xs: '100%', md: 'auto' }, '& > *': { mb: '0 !important' } }}>
+          <Box sx={{ flex: 1, width: '100%', '& > *': { mb: '0 !important' } }}>
             <DashboardFilters onChange={setFilters} onExport={handleExport} />
           </Box>
         </Stack>
@@ -305,7 +305,7 @@ export default function UserDashboard() {
         <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex' }}>
           <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 3 }}>
             {/* Pie chart */}
-            <Card sx={{ p: { xs: 2, md: 3 }, flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <Card sx={{ p: { xs: 2, md: 3 }, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'visible' }}>
               <SectionHeader title="Répartition par statut" />
               <Suspense
                 fallback={
@@ -314,7 +314,7 @@ export default function UserDashboard() {
                   </Box>
                 }
               >
-                <StatusPieChart data={statusData} size={220} showLegend={false} showLabels={false} />
+                <StatusPieChart data={statusData} size={260} showLegend={false} showLabels={false} />
               </Suspense>
               <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mt: 1, justifyContent: 'center' }}>
                 {statusData.map((s) => (

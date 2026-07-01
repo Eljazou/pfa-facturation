@@ -16,6 +16,7 @@ import { showToast } from '../notifications/toastSlice';
 import { getSettings } from '../../services/settingsService';
 import { ref as dbRef, update as dbUpdate } from 'firebase/database';
 import { db } from '../../config/firebase';
+import { logger } from '../../utils/logger';
 
 const PAYMENT_TYPES = ['Virement bancaire', 'Chèque', 'Espèces'];
 
@@ -45,8 +46,6 @@ export default function ValidationActions({ invoice, onUpdated }) {
       dispatch(showToast({ message: res.error, severity: 'error' }));
       return;
     }
-    // Notify all admins (best-effort: notify by role lookup is out of scope; store under 'admin' bucket)
-    try { await triggerNotification('invoice_submitted', { ...invoice, ...res.payload }, 'admin'); } catch { /* ignore */ }
     dispatch(showToast({ message: 'Facture soumise pour validation', severity: 'success' }));
     onUpdated?.(res.payload);
   };
@@ -92,17 +91,13 @@ export default function ValidationActions({ invoice, onUpdated }) {
       }
     } catch (err) {
       emailError = err?.message || 'Erreur inconnue';
-      console.warn('Email dispatch failed:', err);
+      logger.warn('Email dispatch failed:', err);
     }
 
     setLoading(false);
     setValidateOpen(false);
-    dispatch(showToast({
-      message: emailOk
-        ? 'Facture validée et email envoyé au client'
-        : `Facture validée — email non envoyé : ${emailError}`,
-      severity: emailOk ? 'success' : 'warning',
-    }));
+    const validatedInv = { ...invoice, ...res.payload, email_sent: emailOk };
+    try { await triggerNotification('invoice_validated_admin', validatedInv, user.uid); } catch { /* ignore */ }
     onUpdated?.(res.payload);
   };
 
@@ -116,12 +111,11 @@ export default function ValidationActions({ invoice, onUpdated }) {
       dispatch(showToast({ message: res.error, severity: 'error' }));
       return;
     }
+    const rejectedInv = { ...invoice, ...res.payload, rejection_reason: reason.trim() };
     if (invoice.userId) {
-      try {
-        await triggerNotification('invoice_rejected', { ...invoice, ...res.payload, rejection_reason: reason.trim() }, invoice.userId);
-      } catch { /* ignore */ }
+      try { await triggerNotification('invoice_rejected', rejectedInv, invoice.userId); } catch { /* ignore */ }
     }
-    dispatch(showToast({ message: 'Facture rejetée', severity: 'warning' }));
+    try { await triggerNotification('invoice_rejected_admin', rejectedInv, user.uid); } catch { /* ignore */ }
     setReason('');
     onUpdated?.(res.payload);
   };
@@ -157,8 +151,6 @@ export default function ValidationActions({ invoice, onUpdated }) {
     try {
       await dbUpdate(dbRef(db, `factures/${invoice.id}`), { rejection_reason: null, rejected_at: null, rejected_by: null });
     } catch { /* non-critical */ }
-    // Notify admins
-    try { await triggerNotification('invoice_submitted', { ...invoice, ...res.payload }, 'admin'); } catch { /* ignore */ }
     setLoading(false);
     setResubmitOpen(false);
     dispatch(showToast({ message: 'Facture resoumise pour validation', severity: 'success' }));

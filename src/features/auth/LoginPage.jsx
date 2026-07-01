@@ -43,10 +43,12 @@ export default function LoginPage() {
       setResetMsg({ type: 'success', text: 'Email de réinitialisation envoyé. Vérifiez votre boîte mail.' });
     } catch (err) {
       const msgs = {
-        'auth/user-not-found':  'Aucun compte avec cet email.',
-        'auth/invalid-email':   'Email invalide.',
+        'auth/user-not-found':  'Aucun compte trouvé avec cet email.',
+        'auth/invalid-email':   'Adresse email invalide.',
+        'auth/too-many-requests': 'Trop de tentatives. Réessayez dans quelques minutes.',
+        'auth/network-request-failed': 'Problème de connexion. Vérifiez votre internet.',
       };
-      setResetMsg({ type: 'error', text: msgs[err.code] || err.message });
+      setResetMsg({ type: 'error', text: msgs[err.code] || 'Une erreur est survenue. Réessayez.' });
     } finally {
       setResetLoading(false);
     }

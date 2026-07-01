@@ -11,6 +11,7 @@ import {
   Elements, CardElement, useStripe, useElements,
 } from '@stripe/react-stripe-js';
 import { stripePromise } from '../config/stripe';
+import { logger } from '../utils/logger';
 
 /* ─── Card element styles to match MUI look ─────────────────────────────── */
 const CARD_STYLE = {
@@ -115,7 +116,7 @@ function CheckoutForm({ plan, billingCycle, onSuccess }) {
       return;
     }
 
-    console.log('[Stripe Test] PaymentMethod created:', paymentMethod.id);
+    logger.log('[Stripe Test] PaymentMethod created:', paymentMethod.id);
     setLoading(false);
     onSuccess({ email, name, plan, paymentMethod });
   };
@@ -182,20 +183,7 @@ function CheckoutForm({ plan, billingCycle, onSuccess }) {
           </Box>
         </Box>
 
-        {/* Test card hint */}
-        <Box sx={{
-          bgcolor: '#FEF9C3', border: '1px solid #FDE68A',
-          borderRadius: '8px', p: 1.5,
-        }}>
-          <Typography sx={{ fontSize: 12, color: '#92400E', fontWeight: 600, mb: 0.25, fontFamily: 'DM Sans, sans-serif' }}>
-            🧪 Mode test — Utilisez cette carte
-          </Typography>
-          <Typography sx={{ fontSize: 12, color: '#92400E', fontFamily: 'monospace' }}>
-            Numéro&nbsp;&nbsp;: 4242 4242 4242 4242<br />
-            Expiry&nbsp;&nbsp;&nbsp;: 12/26 &nbsp; CVC : 123<br />
-            Code postal : n'importe lequel
-          </Typography>
-        </Box>
+
 
         {error && (
           <Alert severity="error" sx={{ borderRadius: '10px', fontSize: 13 }}>

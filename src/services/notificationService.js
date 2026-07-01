@@ -2,10 +2,12 @@ import { ref, push, update, remove } from 'firebase/database';
 import { db } from '../config/firebase';
 
 const MESSAGES = {
-  invoice_submitted: (inv) => `Facture ${inv.numero} soumise pour validation`,
-  invoice_validated: (inv) => `Facture ${inv.numero} validée — envoi email au client en cours`,
-  invoice_rejected:  (inv) => `Facture ${inv.numero} rejetée: ${inv.rejection_reason || ''}`,
-  invoice_paid:      (inv) => `Facture ${inv.numero} marquée comme payée`,
+  invoice_submitted:        (inv) => `Nouvelle facture ${inv.numero} soumise pour validation`,
+  invoice_validated:        (inv) => `Facture ${inv.numero} validée${inv.email_sent ? ' — email client envoyé' : ''}`,
+  invoice_validated_admin:  (inv) => `Vous avez validé la facture ${inv.numero}${inv.email_sent ? ' — email client envoyé' : ' — email non envoyé'}`,
+  invoice_rejected:         (inv) => `Facture ${inv.numero} rejetée : ${inv.rejection_reason || ''}`,
+  invoice_rejected_admin:   (inv) => `Vous avez rejeté la facture ${inv.numero} : ${inv.rejection_reason || ''}`,
+  invoice_paid:             (inv) => `Facture ${inv.numero} marquée comme payée`,
 };
 
 export async function triggerNotification(type, invoiceData, targetUserId) {

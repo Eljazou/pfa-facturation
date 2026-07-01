@@ -7,9 +7,20 @@ import {
   updatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
+  getAuth,
 } from 'firebase/auth';
 import { ref, set, get, onValue, off, push, update, remove } from 'firebase/database';
+import { initializeApp, deleteApp } from 'firebase/app';
 import { auth, db } from '../config/firebase';
+import { logger } from '../utils/logger';
+
+function handleFirebaseError(error) {
+  logger.error('Firebase error:', error.code || error.message);
+  if (error.code === 'PERMISSION_DENIED' || error.message?.includes('Permission denied')) {
+    throw new Error('Accès non autorisé');
+  }
+  throw error;
+}
 
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
@@ -164,3 +175,40 @@ export const subscribeUsers = (callback) => {
 
 export const updateUserRole = (uid, role) =>
   update(ref(db, `users/${uid}`), { role });
+
+export const adminDeleteUser = (uid) => remove(ref(db, `users/${uid}`));
+
+export const adminUpdateUser = (uid, { displayName, role }) => {
+  const payload = {};
+  if (displayName !== undefined) payload.displayName = displayName;
+  if (role !== undefined) payload.role = role;
+  return update(ref(db, `users/${uid}`), payload);
+};
+
+export const adminCreateUser = async (email, password, displayName, role = 'user') => {
+  const config = {
+    apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    databaseURL:       import.meta.env.VITE_FIREBASE_DATABASE_URL,
+    projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET     || '',
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+    appId:             import.meta.env.VITE_FIREBASE_APP_ID,
+  };
+  const secondary = initializeApp(config, `admin-create-${Date.now()}`);
+  try {
+    const secondaryAuth = getAuth(secondary);
+    const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+    await updateProfile(cred.user, { displayName });
+    await set(ref(db, `users/${cred.user.uid}`), {
+      displayName,
+      email,
+      role,
+      createdAt: new Date().toISOString(),
+    });
+    await signOut(secondaryAuth);
+    return cred.user;
+  } finally {
+    await deleteApp(secondary);
+  }
+};

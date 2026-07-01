@@ -57,7 +57,6 @@ export default function Sidebar({ mobileOpen, onClose }) {
 
   const NavItem = ({ item, active }) => {
     const Icon = item.icon;
-    const showBadge = isAdmin && item.path === '/invoices' && pendingCount > 0;
     const button = (
       <ListItemButton
         onClick={() => { navigate(item.path); onClose?.(); }}
@@ -92,18 +91,6 @@ export default function Sidebar({ mobileOpen, onClose }) {
               primary={item.label}
               primaryTypographyProps={{ fontSize: 14, fontWeight: active ? 600 : 500 }}
             />
-            {showBadge && (
-              <Box
-                sx={{
-                  ml: 1, px: 1, py: 0.25,
-                  bgcolor: active ? 'rgba(255,255,255,0.25)' : tokens.color.error,
-                  color: '#FFFFFF', borderRadius: 999,
-                  fontSize: 11, fontWeight: 600, lineHeight: 1.4,
-                }}
-              >
-                {pendingCount}
-              </Box>
-            )}
           </>
         )}
       </ListItemButton>

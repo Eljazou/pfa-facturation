@@ -84,6 +84,7 @@ const invoicesSlice = createSlice({
   reducers: {
     setCurrentInvoice(state, action) { state.currentInvoice = action.payload; },
     clearCurrentInvoice(state) { state.currentInvoice = null; },
+    setAllInvoices(state, action) { state.invoices = action.payload; state.loading = false; },
   },
   extraReducers: (builder) => {
     builder
@@ -132,5 +133,5 @@ const invoicesSlice = createSlice({
   },
 });
 
-export const { setCurrentInvoice, clearCurrentInvoice } = invoicesSlice.actions;
+export const { setCurrentInvoice, clearCurrentInvoice, setAllInvoices } = invoicesSlice.actions;
 export default invoicesSlice.reducer;

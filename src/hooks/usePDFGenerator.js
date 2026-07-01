@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { getSettings } from '../services/settingsService';
 import { getInvoice } from '../services/firebaseService';
+import { logger } from '../utils/logger';
 
 export function usePDFGenerator() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -26,7 +27,7 @@ export function usePDFGenerator() {
         const settings = await getSettings();
         settings.forEach((s) => { companyData[s.key] = s.value; });
       } catch (e) {
-        console.warn('[usePDFGenerator] Settings unavailable, using empty company data:', e.message);
+        logger.warn('[usePDFGenerator] Settings unavailable, using empty company data:', e.message);
       }
 
       const { generatePDF } = await import('../utils/pdfGenerator');
@@ -38,7 +39,7 @@ export function usePDFGenerator() {
       );
       return { doc, invoice };
     } catch (err) {
-      console.error('[usePDFGenerator] PDF generation failed:', err);
+      logger.error('[usePDFGenerator] PDF generation failed:', err);
       throw err;
     } finally {
       setIsGenerating(false);

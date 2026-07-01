@@ -24,17 +24,17 @@ export default function StatusPieChart({ data, size = 280, showLegend = true, sh
   const total = data.reduce((s, x) => s + x.value, 0);
 
   return (
-    <Box sx={{ width: '100%', height: size }}>
+    <Box sx={{ width: '100%', height: size, overflow: 'visible' }}>
       <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
+        <PieChart margin={{ top: 16, right: 16, bottom: 16, left: 16 }}>
           <Pie
             data={data}
             dataKey="value"
             nameKey="name"
             cx="50%"
             cy="50%"
-            innerRadius="55%"
-            outerRadius="80%"
+            innerRadius="45%"
+            outerRadius="65%"
             paddingAngle={2}
             label={showLabels ? (e) => `${((e.value / total) * 100).toFixed(0)}%` : false}
             labelLine={false}

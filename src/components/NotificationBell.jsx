@@ -15,10 +15,12 @@ import { markNotificationRead, markAllNotificationsRead } from '../services/noti
 import { formatDistanceToNow } from '../utils/timeFormat';
 
 const ICON_BY_TYPE = {
-  invoice_submitted: { Icon: HourglassEmptyIcon, color: 'warning.main' },
-  invoice_validated: { Icon: CheckCircleIcon,    color: 'success.main' },
-  invoice_rejected:  { Icon: CancelIcon,         color: 'error.main'   },
-  invoice_paid:      { Icon: PaidIcon,           color: 'info.main'    },
+  invoice_submitted:       { Icon: HourglassEmptyIcon, color: 'warning.main' },
+  invoice_validated:       { Icon: CheckCircleIcon,    color: 'success.main' },
+  invoice_validated_admin: { Icon: CheckCircleIcon,    color: 'success.main' },
+  invoice_rejected:        { Icon: CancelIcon,         color: 'error.main'   },
+  invoice_rejected_admin:  { Icon: CancelIcon,         color: 'error.main'   },
+  invoice_paid:            { Icon: PaidIcon,           color: 'info.main'    },
 };
 
 function NotificationBell() {

@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { logger } from './logger';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -110,7 +111,7 @@ export async function generatePDF(invoiceData, clientData, companyData, signatur
       doc.addImage(imgData, imgType, MARGIN, 10, 40, 20);
       textX = 60; // push text to the right of the logo
     } catch (e) {
-      console.warn('[pdfGenerator] Logo could not be added:', e);
+      logger.warn('[pdfGenerator] Logo could not be added:', e);
     }
   }
 

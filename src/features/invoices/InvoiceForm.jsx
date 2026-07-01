@@ -585,16 +585,17 @@ export default function InvoiceForm() {
                     variant="outlined"
                     startIcon={<Draw />}
                     onClick={() => setSigDialog(true)}
-                    fullWidth
+                    sx={{ flex: 1 }}
                   >
                     Modifier
                   </Button>
                   <Button
                     size="small"
                     color="error"
-                    variant="outlined"
+                    variant="contained"
                     startIcon={<Clear />}
                     onClick={() => formik.setFieldValue('signature_base64', '')}
+                    sx={{ flex: 1 }}
                   >
                     Supprimer
                   </Button>

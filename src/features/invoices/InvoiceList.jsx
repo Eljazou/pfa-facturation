@@ -237,18 +237,20 @@ export default function InvoiceList() {
         />
       </Box>
 
-      <ToggleButtonGroup
-        value={statusFilter}
-        exclusive
-        onChange={(_, v) => { if (v !== null) setStatusFilter(v); }}
-        size="small"
-        sx={{ mb: 2, flexWrap: 'wrap' }}
-      >
-        <ToggleButton value="all">Tous</ToggleButton>
-        {Object.entries(STATUS_META).map(([k, v]) => (
-          <ToggleButton key={k} value={k}>{v.label}</ToggleButton>
-        ))}
-      </ToggleButtonGroup>
+      <Box sx={{ overflowX: 'auto', mb: 2, pb: 0.5, WebkitOverflowScrolling: 'touch' }}>
+        <ToggleButtonGroup
+          value={statusFilter}
+          exclusive
+          onChange={(_, v) => { if (v !== null) setStatusFilter(v); }}
+          size="small"
+          sx={{ flexWrap: 'nowrap', whiteSpace: 'nowrap' }}
+        >
+          <ToggleButton value="all">Tous</ToggleButton>
+          {Object.entries(STATUS_META).map(([k, v]) => (
+            <ToggleButton key={k} value={k}>{v.label}</ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Box>
 
       <Box sx={{ width: '100%', overflowX: 'auto' }}>
         <DataGrid

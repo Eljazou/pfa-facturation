@@ -62,7 +62,7 @@ export default function ArticleListPage() {
   };
 
   const getCategoryName = (catId) =>
-    categories.find((c) => c.id === catId || c.id === Number(catId))?.nom ?? '—';
+    categories.find((c) => String(c.id) === String(catId))?.nom ?? '—';
 
   const filtered =
     categoryFilter === 'all'
@@ -122,8 +122,8 @@ export default function ArticleListPage() {
 
       {tab === 0 ? (
         <>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <FormControl size="small" sx={{ minWidth: 220 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center', mb: 2 }}>
+            <FormControl size="small" sx={{ flex: 1, minWidth: 160 }}>
               <InputLabel>Filtrer par catégorie</InputLabel>
               <Select
                 value={categoryFilter}
@@ -138,7 +138,9 @@ export default function ArticleListPage() {
                 ))}
               </Select>
             </FormControl>
-            <Button variant="contained" startIcon={<Add />} onClick={() => setFormOpen(true)}>
+            <Button variant="contained" startIcon={<Add />} onClick={() => setFormOpen(true)}
+              sx={{ flexShrink: 0 }}
+            >
               Nouvel article
             </Button>
           </Box>

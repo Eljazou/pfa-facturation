@@ -3,15 +3,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   AppBar, Toolbar, IconButton, Typography, Box, Menu, MenuItem,
-  Avatar, Divider, Tooltip, ListItemIcon, TextField, InputAdornment,
+  Avatar, Divider, Tooltip, ListItemIcon,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import SearchIcon from '@mui/icons-material/Search';
 import { logout } from '../../store/authSlice';
 import NotificationBell from '../NotificationBell';
-import { tokens } from '../../theme';
+import GlobalSearch from '../GlobalSearch';
 
 export default function Topbar({ title, subtitle, onMenuClick }) {
   const dispatch = useDispatch();
@@ -50,22 +49,9 @@ export default function Topbar({ title, subtitle, onMenuClick }) {
         <Box sx={{ flex: 1 }} />
 
         {/* Search — desktop only */}
-        <TextField
-          placeholder="Rechercher…"
-          size="small"
-          sx={{
-            display: { xs: 'none', lg: 'block' },
-            width: 280,
-            '& .MuiOutlinedInput-root': { bgcolor: tokens.color.bgApp, height: 38 },
-          }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-              </InputAdornment>
-            ),
-          }}
-        />
+        <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
+          <GlobalSearch />
+        </Box>
 
         <NotificationBell />
 

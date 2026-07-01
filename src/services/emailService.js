@@ -1,4 +1,5 @@
 import emailjs from '@emailjs/browser';
+import { logger } from '../utils/logger';
 
 const SERVICE_ID  = import.meta.env.VITE_EMAILJS_SERVICE_ID;
 const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
@@ -46,7 +47,7 @@ export async function sendInvoiceEmail(invoiceData, clientData, companySettings,
     await emailjs.send(SERVICE_ID, TEMPLATE_ID, params, PUBLIC_KEY);
     return { success: true };
   } catch (err) {
-    console.warn('[emailService] EmailJS send failed:', err);
+    logger.warn('[emailService] EmailJS send failed:', err);
     return { success: false, error: err?.text || err?.message || 'EmailJS error' };
   }
 }
